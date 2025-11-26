@@ -46,26 +46,36 @@ This is a PHP SDK for the Polymarket API - a prediction market platform. The SDK
 ```
 src/
 ├── Client.php                    # Main SDK entry point
+├── Gamma.php                     # Gamma API client (market data)
+├── Clob.php                      # CLOB API client (trading)
 ├── Config.php                    # Configuration management
 ├── Http/                         # HTTP layer abstraction
 │   ├── HttpClientInterface.php
 │   ├── GuzzleHttpClient.php
+│   ├── FakeGuzzleHttpClient.php # For testing
 │   └── Response.php
 ├── Resources/                    # API resource services
-│   ├── Markets.php              # /markets endpoints
-│   ├── Orders.php               # /orders endpoints
-│   └── Events.php               # /events endpoints
-├── Models/                       # Data transfer objects
+│   ├── Resource.php             # Base resource class
+│   ├── Markets.php              # Gamma: /markets endpoints
+│   └── Orders.php               # CLOB: /orders endpoints
+├── Models/                       # Data transfer objects (future)
 │   ├── Market.php
 │   ├── Order.php
 │   └── Event.php
+├── Enums/                        # Type-safe enumerations
+│   ├── OrderSide.php
+│   ├── OrderType.php
+│   ├── OrderStatus.php
+│   └── SignatureType.php
 ├── Exceptions/                   # Custom exceptions
 │   ├── PolymarketException.php  # Base exception
 │   ├── AuthenticationException.php
 │   ├── ValidationException.php
 │   ├── RateLimitException.php
+│   ├── NotFoundException.php
+│   ├── JsonParseException.php
 │   └── ApiException.php
-└── Support/                      # Helper utilities
+└── Support/                      # Helper utilities (future)
     ├── Arr.php                   # Array helpers
     └── Str.php                   # String helpers
 ```
@@ -74,11 +84,18 @@ src/
 
 #### 1. Client.php
 - Main entry point for the SDK
-- Factory for creating resource instances
-- Manages HTTP client and configuration
-- Example: `$client = new Client($apiKey); $client->markets()->list();`
+- Provides `gamma()` and `clob()` methods
+- Manages configuration
+- Example: `$client = new Client($apiKey); $client->gamma()->markets()->list();`
 
-#### 2. Resources (Resource Classes)
+#### 2. Gamma.php & Clob.php
+- Separate client classes for each API
+- Each creates its own HTTP client with the appropriate base URL
+- `Gamma`: Exposes market data resources (Markets, Events)
+- `Clob`: Exposes trading resources (Orders, OrderBook, Trades)
+- Enforces type safety - can't accidentally call wrong API
+
+#### 3. Resources (Resource Classes)
 - Each resource maps to a set of API endpoints
 - Extend from a base `Resource` class if needed
 - Methods should be named after the action: `list()`, `get()`, `create()`, `update()`, `delete()`
@@ -103,6 +120,72 @@ src/
 - Include original API response in exception when available
 - Use specific exception types for different error categories
 - Include helpful error messages
+
+### CRITICAL: Dual API Architecture (Gamma vs CLOB)
+
+**Polymarket operates TWO separate API systems with different base URLs:**
+
+#### 1. Gamma API (`https://gamma-api.polymarket.com`)
+- **Purpose**: Read-only market data and information
+- **Resources**: Markets, Events, general market information
+- **Authentication**: Optional API key for rate limiting
+- **Use Cases**:
+  - Fetching available markets
+  - Getting event information
+  - Reading market metadata
+  - Retrieving historical market data
+
+#### 2. CLOB API (`https://clob.polymarket.com`)
+- **Purpose**: Order book and trading operations
+- **Resources**: Orders, Order Books, Trading
+- **Authentication**: Required for write operations (EIP712 signatures)
+- **Use Cases**:
+  - Creating and posting orders
+  - Canceling orders
+  - Fetching order history
+  - Getting order book data
+  - Real-time price/midpoint information
+
+#### Implementation in the SDK
+
+The SDK uses **separate client classes** for each API:
+
+```php
+$client = new Client($apiKey);
+
+// Access Gamma API via gamma() method
+$markets = $client->gamma()->markets()->list();
+
+// Access CLOB API via clob() method
+$orders = $client->clob()->orders()->list();
+```
+
+**Architecture:**
+- `Client` - Main entry point, provides `gamma()` and `clob()` methods
+- `Gamma` - Gamma API client, exposes only Gamma resources (Markets, Events)
+- `Clob` - CLOB API client, exposes only CLOB resources (Orders, OrderBook)
+
+The `Config` class supports both base URLs:
+```php
+public readonly string $gammaBaseUrl;  // Default: https://gamma-api.polymarket.com
+public readonly string $clobBaseUrl;   // Default: https://clob.polymarket.com
+```
+
+**IMPORTANT RULES:**
+- NEVER add order-related methods to `Gamma` class
+- NEVER add market data methods to `Clob` class
+- When adding new resources, add them to the correct client class:
+  - Market data → `Gamma` class
+  - Trading operations → `Clob` class
+- Each client creates its own HTTP client with the appropriate base URL
+- Resources only have access to their respective API endpoints
+
+#### Reference Documentation
+- Gamma API: https://docs.polymarket.com/ (general API docs)
+- CLOB API: https://docs.polymarket.com/developers/CLOB/
+- Official Clients:
+  - Python: https://github.com/Polymarket/py-clob-client
+  - TypeScript: https://github.com/Polymarket/clob-client
 
 ## Polymarket-Specific Concerns
 
@@ -185,7 +268,8 @@ Example:
 it('creates config with default values', function () {
     $config = new Config();
 
-    expect($config->baseUrl)->toBe('https://gamma-api.polymarket.com')
+    expect($config->gammaBaseUrl)->toBe('https://gamma-api.polymarket.com')
+        ->and($config->clobBaseUrl)->toBe('https://clob.polymarket.com')
         ->and($config->timeout)->toBe(30);
 });
 ```

@@ -12,24 +12,28 @@ use Danielgnh\PolymarketPhp\Exceptions\PolymarketException;
 $client = new Client('your-api-key-here');
 
 try {
+    // === Gamma API (Market Data) ===
+
     // List markets
-    $markets = $client->markets()->list(['active' => true], limit: 10);
+    $markets = $client->gamma()->markets()->list(['active' => true], limit: 10);
     echo "Found " . count($markets) . " markets\n";
 
     // Get a specific market
-    $market = $client->markets()->get('market-id');
+    $market = $client->gamma()->markets()->get('market-id');
     echo "Market: " . ($market['name'] ?? 'Unknown') . "\n";
 
     // Search markets
-    $searchResults = $client->markets()->search('election', limit: 5);
+    $searchResults = $client->gamma()->markets()->search('election', limit: 5);
     echo "Search returned " . count($searchResults) . " results\n";
 
+    // === CLOB API (Trading Operations) ===
+
     // List orders
-    $orders = $client->orders()->list(limit: 10);
+    $orders = $client->clob()->orders()->list(limit: 10);
     echo "Found " . count($orders) . " orders\n";
 
     // Create an order
-    $newOrder = $client->orders()->create([
+    $newOrder = $client->clob()->orders()->create([
         'market_id' => 'market-id',
         'side' => OrderSide::BUY->value,
         'type' => OrderType::GTC->value,
@@ -39,9 +43,9 @@ try {
     echo "Created order: " . $newOrder['id'] . "\n";
 
     // Cancel an order
-    $result = $client->orders()->cancel('order-id');
+    $result = $client->clob()->orders()->cancel('order-id');
     echo "Order cancelled\n";
 
 } catch (PolymarketException $e) {
-	/* Handle exception */
+    /* Handle exception */
 }
