@@ -1,0 +1,15 @@
+# Feature Tests
+
+This directory contains integration/feature tests that test multiple components working together.
+
+Feature tests should:
+- Test realistic user scenarios
+- Mock HTTP responses but test full request/response cycle
+- Use fixtures for realistic API responses
+- Test error handling across component boundaries
+
+Example feature tests:
+- Fetching and parsing market data
+- Placing orders and handling responses
+- Authentication flows
+- Pagination and filtering

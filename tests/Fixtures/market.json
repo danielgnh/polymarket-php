@@ -1,0 +1,13 @@
+{
+  "id": "0x1234567890abcdef",
+  "question": "Will Bitcoin reach $100k by end of 2025?",
+  "description": "This market will resolve to Yes if Bitcoin (BTC) reaches $100,000 USD on any major exchange by December 31, 2025, 11:59 PM UTC.",
+  "outcomes": ["Yes", "No"],
+  "outcomePrices": ["0.52", "0.48"],
+  "volume": "1234567.89",
+  "liquidity": "500000.00",
+  "endDate": "2025-12-31T23:59:59Z",
+  "active": true,
+  "closed": false,
+  "tags": ["crypto", "bitcoin", "price"]
+}

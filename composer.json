@@ -1,0 +1,53 @@
+{
+    "name": "danielgnh/polymarket-php",
+    "description": "PHP SDK for Polymarket API",
+    "license": "MIT",
+    "keywords": ["polymarket", "api", "sdk", "prediction-markets"],
+    "type": "library",
+    "require": {
+        "php": "^8.4",
+        "guzzlehttp/guzzle": "^7.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-client": "^1.0",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.90",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-arch": "^3.1",
+        "phpstan/phpstan": "^2.1",
+        "symfony/var-dumper": "^7.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Danielgnh\\PolymarketPhp\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Danielgnh\\PolymarketPhp\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Daniel Goncharov",
+            "email": "uhorman@gmail.com"
+        }
+    ],
+    "scripts": {
+        "test": "pest",
+        "test-coverage": "pest --coverage",
+        "phpstan": "phpstan analyse",
+        "cs-fix": "php-cs-fixer fix",
+        "cs-check": "php-cs-fixer fix --dry-run --diff"
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

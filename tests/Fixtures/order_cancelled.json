@@ -1,0 +1,14 @@
+{
+  "id": "order_123456",
+  "marketId": "0x1234567890abcdef",
+  "outcome": "Yes",
+  "side": "buy",
+  "price": "0.52",
+  "size": "100.00",
+  "filledSize": "0.00",
+  "status": "cancelled",
+  "type": "limit",
+  "createdAt": "2025-01-15T10:30:00Z",
+  "updatedAt": "2025-01-15T12:30:00Z",
+  "cancelledAt": "2025-01-15T12:30:00Z"
+}

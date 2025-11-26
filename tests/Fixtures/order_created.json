@@ -1,0 +1,14 @@
+{
+  "id": "order_new_001",
+  "marketId": "0x1234567890abcdef",
+  "outcome": "Yes",
+  "side": "buy",
+  "price": "0.55",
+  "size": "50.00",
+  "filledSize": "0.00",
+  "status": "open",
+  "type": "limit",
+  "createdAt": "2025-01-15T12:00:00Z",
+  "updatedAt": "2025-01-15T12:00:00Z",
+  "expiresAt": "2025-01-22T12:00:00Z"
+}

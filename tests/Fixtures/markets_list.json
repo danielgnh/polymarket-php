@@ -1,0 +1,41 @@
+[
+  {
+    "id": "0x1234567890abcdef",
+    "question": "Will Bitcoin reach $100k by end of 2025?",
+    "description": "This market will resolve to Yes if Bitcoin (BTC) reaches $100,000 USD on any major exchange by December 31, 2025, 11:59 PM UTC.",
+    "outcomes": ["Yes", "No"],
+    "outcomePrices": ["0.52", "0.48"],
+    "volume": "1234567.89",
+    "liquidity": "500000.00",
+    "endDate": "2025-12-31T23:59:59Z",
+    "active": true,
+    "closed": false,
+    "tags": ["crypto", "bitcoin", "price"]
+  },
+  {
+    "id": "0xfedcba0987654321",
+    "question": "Will Ethereum merge succeed?",
+    "description": "Market resolves to Yes if Ethereum successfully completes the merge to Proof of Stake.",
+    "outcomes": ["Yes", "No"],
+    "outcomePrices": ["0.85", "0.15"],
+    "volume": "567890.12",
+    "liquidity": "250000.00",
+    "endDate": "2025-06-30T23:59:59Z",
+    "active": true,
+    "closed": false,
+    "tags": ["crypto", "ethereum"]
+  },
+  {
+    "id": "0xabcdef1234567890",
+    "question": "Will AI surpass human intelligence by 2030?",
+    "description": "This market resolves based on expert consensus on AGI achievement.",
+    "outcomes": ["Yes", "No"],
+    "outcomePrices": ["0.23", "0.77"],
+    "volume": "892345.67",
+    "liquidity": "400000.00",
+    "endDate": "2030-12-31T23:59:59Z",
+    "active": true,
+    "closed": false,
+    "tags": ["technology", "ai", "future"]
+  }
+]
