@@ -66,6 +66,8 @@ class FakeGuzzleHttpClient implements HttpClientInterface
      * Set a JSON response for a specific method and path.
      *
      * @param array<string, mixed> $data
+     *
+     * @throws PolymarketException
      */
     public function addJsonResponse(string $method, string $path, array $data, int $statusCode = 200): void
     {
@@ -107,6 +109,9 @@ class FakeGuzzleHttpClient implements HttpClientInterface
         ];
     }
 
+    /**
+     * @throws PolymarketException
+     */
     private function getResponse(string $method, string $path): Response
     {
         $key = $this->makeKey($method, $path);

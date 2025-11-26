@@ -10,7 +10,6 @@ interface HttpClientInterface
 {
     /**
      * @param array<string, mixed> $query
-     *./ven
      * @throws PolymarketException
      */
     public function get(string $path, array $query = []): Response;
