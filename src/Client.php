@@ -4,24 +4,15 @@ declare(strict_types=1);
 
 namespace Danielgnh\PolymarketPhp;
 
-use Danielgnh\PolymarketPhp\Http\GuzzleHttpClient;
 use Danielgnh\PolymarketPhp\Http\HttpClientInterface;
-use Danielgnh\PolymarketPhp\Resources\Markets;
-use Danielgnh\PolymarketPhp\Resources\Orders;
 
 class Client
 {
-    private HttpClientInterface $httpClient {
-        get {
-            return $this->httpClient;
-        }
-    }
+    private Config $config;
 
-    private Config $config {
-        get {
-            return $this->config;
-        }
-    }
+    private ?Gamma $gammaClient = null;
+
+    private ?Clob $clobClient = null;
 
     /**
      * @param array<string, mixed> $options
@@ -29,19 +20,35 @@ class Client
     public function __construct(
         ?string $apiKey = null,
         array $options = [],
-        ?HttpClientInterface $httpClient = null
+        ?HttpClientInterface $gammaHttpClient = null,
+        ?HttpClientInterface $clobHttpClient = null
     ) {
         $this->config = new Config($apiKey, $options);
-        $this->httpClient = $httpClient ?? new GuzzleHttpClient($this->config);
+
+        if ($gammaHttpClient !== null) {
+            $this->gammaClient = new Gamma($this->config, $gammaHttpClient);
+        }
+
+        if ($clobHttpClient !== null) {
+            $this->clobClient = new Clob($this->config, $clobHttpClient);
+        }
     }
 
-    public function markets(): Markets
+    public function gamma(): Gamma
     {
-        return new Markets($this->httpClient);
+        if ($this->gammaClient === null) {
+            $this->gammaClient = new Gamma($this->config);
+        }
+
+        return $this->gammaClient;
     }
 
-    public function orders(): Orders
+    public function clob(): Clob
     {
-        return new Orders($this->httpClient);
+        if ($this->clobClient === null) {
+            $this->clobClient = new Clob($this->config);
+        }
+
+        return $this->clobClient;
     }
 }

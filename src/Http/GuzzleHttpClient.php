@@ -19,10 +19,12 @@ class GuzzleHttpClient implements HttpClientInterface
 {
     private GuzzleClient $client;
 
-    public function __construct(private readonly Config $config)
-    {
+    public function __construct(
+        private readonly string $baseUrl,
+        private readonly Config $config
+    ) {
         $this->client = new GuzzleClient([
-            'base_uri' => $this->config->baseUrl,
+            'base_uri' => $this->baseUrl,
             'timeout' => $this->config->timeout,
             'headers' => $this->getDefaultHeaders(),
         ]);

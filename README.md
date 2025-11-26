@@ -34,18 +34,35 @@ use Danielgnh\PolymarketPhp\Client;
 // Initialize the client
 $client = new Client('your-api-key');
 
-// Fetch active markets
-$markets = $client->markets()->list(['active' => true], limit: 10);
+// Gamma API - Market Data
+$markets = $client->gamma()->markets()->list(['active' => true], limit: 10);
+$market = $client->gamma()->markets()->get('market-id');
+$results = $client->gamma()->markets()->search('election');
 
-// Get a specific market
-$market = $client->markets()->get('market-id');
-
-// Search for markets
-$results = $client->markets()->search('election');
-
-// List orders
-$orders = $client->orders()->list(limit: 10);
+// CLOB API - Trading Operations
+$orders = $client->clob()->orders()->list(limit: 10);
 ```
+
+## API Architecture
+
+Polymarket uses two separate API systems:
+
+- **Gamma API** (`https://gamma-api.polymarket.com`) - Read-only market data
+- **CLOB API** (`https://clob.polymarket.com`) - Trading operations and order management
+
+The SDK provides separate client interfaces for each:
+
+```php
+$client = new Client('your-api-key');
+
+// Access Gamma API for market data
+$client->gamma()->markets()->list();
+
+// Access CLOB API for trading
+$client->clob()->orders()->create([...]);
+```
+
+This separation ensures type safety and prevents accidentally calling the wrong API endpoint.
 
 ## API Reference
 
@@ -59,7 +76,8 @@ $client = new Client('your-api-key');
 
 // With custom configuration
 $client = new Client('your-api-key', [
-    'base_url' => 'https://gamma-api.polymarket.com',
+    'gamma_base_url' => 'https://gamma-api.polymarket.com',
+    'clob_base_url' => 'https://clob.polymarket.com',
     'timeout' => 30,
     'retries' => 3,
     'verify_ssl' => true,
@@ -69,14 +87,14 @@ $client = new Client('your-api-key', [
 $client = new Client();
 ```
 
-### Markets
+### Markets (Gamma API)
 
-The Markets resource provides access to prediction market data.
+The Markets resource provides access to prediction market data via the Gamma API.
 
 #### List Markets
 
 ```php
-$markets = $client->markets()->list(
+$markets = $client->gamma()->markets()->list(
     filters: ['active' => true, 'category' => 'politics'],
     limit: 100,
     offset: 0
@@ -93,7 +111,7 @@ $markets = $client->markets()->list(
 #### Get Market by ID
 
 ```php
-$market = $client->markets()->get('market-id');
+$market = $client->gamma()->markets()->get('market-id');
 ```
 
 **Parameters:**
@@ -104,7 +122,7 @@ $market = $client->markets()->get('market-id');
 #### Search Markets
 
 ```php
-$results = $client->markets()->search(
+$results = $client->gamma()->markets()->search(
     query: 'election',
     filters: ['active' => true],
     limit: 50
@@ -118,14 +136,14 @@ $results = $client->markets()->search(
 
 **Returns:** Array of matching markets
 
-### Orders
+### Orders (CLOB API)
 
-The Orders resource handles order management and execution.
+The Orders resource handles order management and execution via the CLOB API.
 
 #### List Orders
 
 ```php
-$orders = $client->orders()->list(
+$orders = $client->clob()->orders()->list(
     filters: ['status' => 'open'],
     limit: 100,
     offset: 0
@@ -142,7 +160,7 @@ $orders = $client->orders()->list(
 #### Get Order by ID
 
 ```php
-$order = $client->orders()->get('order-id');
+$order = $client->clob()->orders()->get('order-id');
 ```
 
 **Parameters:**
@@ -156,7 +174,7 @@ $order = $client->orders()->get('order-id');
 use Danielgnh\PolymarketPhp\Enums\OrderSide;
 use Danielgnh\PolymarketPhp\Enums\OrderType;
 
-$order = $client->orders()->create([
+$order = $client->clob()->orders()->create([
     'market_id' => 'market-id',
     'side' => OrderSide::BUY->value,
     'type' => OrderType::GTC->value,
@@ -180,7 +198,7 @@ $order = $client->orders()->create([
 #### Cancel Order
 
 ```php
-$result = $client->orders()->cancel('order-id');
+$result = $client->clob()->orders()->cancel('order-id');
 ```
 
 **Parameters:**
@@ -194,7 +212,8 @@ The SDK supports the following configuration options:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `base_url` | string | `https://gamma-api.polymarket.com` | API base URL |
+| `gamma_base_url` | string | `https://gamma-api.polymarket.com` | Gamma API base URL |
+| `clob_base_url` | string | `https://clob.polymarket.com` | CLOB API base URL |
 | `timeout` | int | `30` | Request timeout in seconds |
 | `retries` | int | `3` | Number of retry attempts for failed requests |
 | `verify_ssl` | bool | `true` | Whether to verify SSL certificates |
@@ -205,6 +224,8 @@ Example with custom configuration:
 $client = new Client('your-api-key', [
     'timeout' => 60,
     'retries' => 5,
+    'gamma_base_url' => 'https://custom-gamma.example.com',
+    'clob_base_url' => 'https://custom-clob.example.com',
 ]);
 ```
 
@@ -223,7 +244,7 @@ use Danielgnh\PolymarketPhp\Exceptions\{
 };
 
 try {
-    $market = $client->markets()->get('invalid-id');
+    $market = $client->gamma()->markets()->get('invalid-id');
 } catch (AuthenticationException $e) {
     // Handle 401/403 authentication errors
     echo "Authentication failed: " . $e->getMessage();
@@ -319,7 +340,7 @@ SignatureType::EOA                      // Externally owned account (value: 0)
 ```php
 use Danielgnh\PolymarketPhp\Enums\{OrderSide, OrderType};
 
-$order = $client->orders()->create([
+$order = $client->clob()->orders()->create([
     'market_id' => 'market-id',
     'side' => OrderSide::BUY->value,
     'type' => OrderType::GTC->value,
@@ -334,13 +355,13 @@ When working with financial data (prices, amounts), always use string representa
 
 ```php
 // Good - maintains precision
-$order = $client->orders()->create([
+$order = $client->clob()->orders()->create([
     'price' => '0.52',
     'amount' => '10.00',
 ]);
 
 // Bad - may lose precision
-$order = $client->orders()->create([
+$order = $client->clob()->orders()->create([
     'price' => 0.52,  // Float loses precision!
     'amount' => 10.00,
 ]);
