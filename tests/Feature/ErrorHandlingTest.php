@@ -9,7 +9,7 @@ use Danielgnh\PolymarketPhp\Http\Response;
 
 beforeEach(function () {
     $this->fakeHttp = new FakeGuzzleHttpClient();
-    $this->client = new Client(httpClient: $this->fakeHttp);
+    $this->client = new Client(gammaHttpClient: $this->fakeHttp, clobHttpClient: $this->fakeHttp);
 });
 
 describe('JSON parsing errors', function () {
@@ -23,7 +23,7 @@ describe('JSON parsing errors', function () {
 
         $this->fakeHttp->addResponse('GET', '/markets', $invalidJsonResponse);
 
-        $this->client->markets()->list();
+        $this->client->gamma()->markets()->list();
     })->throws(JsonParseException::class);
 
     it('throws JsonParseException with helpful message', function () {
@@ -36,7 +36,7 @@ describe('JSON parsing errors', function () {
         $this->fakeHttp->addResponse('GET', '/orders', $invalidJsonResponse);
 
         try {
-            $this->client->orders()->list();
+            $this->client->clob()->orders()->list();
             expect(false)->toBeTrue(); // Should not reach here
         } catch (JsonParseException $e) {
             expect($e->getMessage())->toContain('Failed to parse JSON response');
@@ -53,7 +53,7 @@ describe('JSON parsing errors', function () {
         $this->fakeHttp->addResponse('GET', '/markets/abc123', $invalidJsonResponse);
 
         try {
-            $this->client->markets()->get('abc123');
+            $this->client->gamma()->markets()->get('abc123');
             expect(false)->toBeTrue(); // Should not reach here
         } catch (JsonParseException $e) {
             expect($e->getMessage())->toContain('not json at all');
@@ -66,7 +66,7 @@ describe('Response validation', function () {
         $validData = ['markets' => []];
         $this->fakeHttp->addJsonResponse('GET', '/markets', $validData);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result)->toBeArray();
     });
@@ -74,7 +74,7 @@ describe('Response validation', function () {
     it('handles empty json response', function () {
         $this->fakeHttp->addJsonResponse('GET', '/markets', []);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result)->toBeArray()
             ->and($result)->toBeEmpty();
@@ -94,7 +94,7 @@ describe('Response validation', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', $nestedData);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result[0]['nested']['deep']['value'])->toBe('works');
     });
@@ -125,7 +125,7 @@ describe('Client error handling', function () {
 
     it('accepts custom http client', function () {
         $fakeHttp = new FakeGuzzleHttpClient();
-        $client = new Client(httpClient: $fakeHttp);
+        $client = new Client(gammaHttpClient: $fakeHttp, clobHttpClient: $fakeHttp);
 
         expect($client)->toBeInstanceOf(Client::class);
     });
@@ -142,7 +142,7 @@ describe('Resource error scenarios', function () {
 
         $this->fakeHttp->addResponse('GET', '/markets/nonexistent', $notFoundResponse);
 
-        $result = $this->client->markets()->get('nonexistent');
+        $result = $this->client->gamma()->markets()->get('nonexistent');
 
         expect($result)->toBeArray()
             ->and($result)->toHaveKey('error');
@@ -157,7 +157,7 @@ describe('Resource error scenarios', function () {
 
         $this->fakeHttp->addResponse('GET', '/orders/nonexistent', $notFoundResponse);
 
-        $result = $this->client->orders()->get('nonexistent');
+        $result = $this->client->clob()->orders()->get('nonexistent');
 
         expect($result)->toBeArray()
             ->and($result)->toHaveKey('error');
@@ -177,7 +177,7 @@ describe('Edge cases', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', $largeDataset);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result)->toBeArray()
             ->and($result)->toHaveCount(1000);
@@ -194,7 +194,7 @@ describe('Edge cases', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', $specialData);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result[0]['question'])->toContain("'special'")
             ->and($result[0]['question'])->toContain('😀');
@@ -211,7 +211,7 @@ describe('Edge cases', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', $unicodeData);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result[0]['question'])->toBe('日本語テスト')
             ->and($result[0]['description'])->toBe('Тест на русском');
@@ -229,7 +229,7 @@ describe('Edge cases', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', $dataWithNulls);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result[0]['description'])->toBeNull()
             ->and($result[0]['tags'])->toBeNull();
@@ -246,7 +246,7 @@ describe('Decimal precision edge cases', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets/test', $preciseData);
 
-        $result = $this->client->markets()->get('test');
+        $result = $this->client->gamma()->markets()->get('test');
 
         expect($result['outcomePrices'][0])->toBe('0.123456789012345')
             ->and($result['volume'])->toBe('12345678901234.567890');
@@ -262,7 +262,7 @@ describe('Decimal precision edge cases', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders/test', $zeroData);
 
-        $result = $this->client->orders()->get('test');
+        $result = $this->client->clob()->orders()->get('test');
 
         expect($result['price'])->toBe('0.00')
             ->and($result['size'])->toBe('0.00')
@@ -278,7 +278,7 @@ describe('Decimal precision edge cases', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets/test', $largeNumbers);
 
-        $result = $this->client->markets()->get('test');
+        $result = $this->client->gamma()->markets()->get('test');
 
         expect($result['volume'])->toBe('999999999999999.99')
             ->and($result['liquidity'])->toBe('888888888888888.88');

@@ -7,7 +7,7 @@ use Danielgnh\PolymarketPhp\Http\FakeGuzzleHttpClient;
 
 beforeEach(function () {
     $this->fakeHttp = new FakeGuzzleHttpClient();
-    $this->client = new Client(httpClient: $this->fakeHttp);
+    $this->client = new Client(gammaHttpClient: $this->fakeHttp, clobHttpClient: $this->fakeHttp);
 });
 
 describe('Markets::list()', function () {
@@ -16,7 +16,7 @@ describe('Markets::list()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', $marketsData);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result)->toBeArray()
             ->and($result)->toHaveCount(3)
@@ -30,7 +30,7 @@ describe('Markets::list()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', array_slice($marketsData, 0, 2));
 
-        $result = $this->client->markets()->list(limit: 2);
+        $result = $this->client->gamma()->markets()->list(limit: 2);
 
         expect($result)->toHaveCount(2);
 
@@ -43,7 +43,7 @@ describe('Markets::list()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', array_slice($marketsData, 1));
 
-        $result = $this->client->markets()->list(offset: 1);
+        $result = $this->client->gamma()->markets()->list(offset: 1);
 
         expect($result)->toHaveCount(2)
             ->and($result[0]['id'])->toBe('0xfedcba0987654321');
@@ -55,7 +55,7 @@ describe('Markets::list()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets', array_values($filteredData));
 
-        $result = $this->client->markets()->list(filters: ['tag' => 'crypto']);
+        $result = $this->client->gamma()->markets()->list(filters: ['tag' => 'crypto']);
 
         expect($result)->toBeArray()
             ->and(count($result))->toBeGreaterThan(0);
@@ -68,7 +68,7 @@ describe('Markets::list()', function () {
     it('handles empty markets list', function () {
         $this->fakeHttp->addJsonResponse('GET', '/markets', []);
 
-        $result = $this->client->markets()->list();
+        $result = $this->client->gamma()->markets()->list();
 
         expect($result)->toBeArray()
             ->and($result)->toBeEmpty();
@@ -81,7 +81,7 @@ describe('Markets::get()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets/0x1234567890abcdef', $marketData);
 
-        $result = $this->client->markets()->get('0x1234567890abcdef');
+        $result = $this->client->gamma()->markets()->get('0x1234567890abcdef');
 
         expect($result)->toBeArray()
             ->and($result['id'])->toBe('0x1234567890abcdef')
@@ -95,7 +95,7 @@ describe('Markets::get()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets/0x1234567890abcdef', $marketData);
 
-        $result = $this->client->markets()->get('0x1234567890abcdef');
+        $result = $this->client->gamma()->markets()->get('0x1234567890abcdef');
 
         expect($result)->toHaveKeys([
             'id',
@@ -117,7 +117,7 @@ describe('Markets::get()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets/0x1234567890abcdef', $marketData);
 
-        $result = $this->client->markets()->get('0x1234567890abcdef');
+        $result = $this->client->gamma()->markets()->get('0x1234567890abcdef');
 
         // Verify prices are strings (not floats)
         expect($result['outcomePrices'][0])->toBeString()
@@ -133,7 +133,7 @@ describe('Markets::search()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets/search', $searchResults);
 
-        $result = $this->client->markets()->search('Bitcoin');
+        $result = $this->client->gamma()->markets()->search('Bitcoin');
 
         expect($result)->toBeArray()
             ->and($result)->toHaveCount(1)
@@ -145,7 +145,7 @@ describe('Markets::search()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets/search', $searchResults);
 
-        $result = $this->client->markets()->search('Bitcoin', limit: 1);
+        $result = $this->client->gamma()->markets()->search('Bitcoin', limit: 1);
 
         expect($result)->toHaveCount(1);
     });
@@ -155,7 +155,7 @@ describe('Markets::search()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/markets/search', $searchResults);
 
-        $result = $this->client->markets()->search('Bitcoin', filters: ['active' => true]);
+        $result = $this->client->gamma()->markets()->search('Bitcoin', filters: ['active' => true]);
 
         expect($result)->toBeArray();
 
@@ -167,7 +167,7 @@ describe('Markets::search()', function () {
     it('handles empty search results', function () {
         $this->fakeHttp->addJsonResponse('GET', '/markets/search', []);
 
-        $result = $this->client->markets()->search('NonexistentMarket');
+        $result = $this->client->gamma()->markets()->search('NonexistentMarket');
 
         expect($result)->toBeArray()
             ->and($result)->toBeEmpty();
@@ -180,7 +180,7 @@ describe('Markets integration scenarios', function () {
         $listData = $this->loadFixture('markets_list.json');
         $this->fakeHttp->addJsonResponse('GET', '/markets', $listData);
 
-        $markets = $this->client->markets()->list(limit: 5);
+        $markets = $this->client->gamma()->markets()->list(limit: 5);
 
         expect($markets)->toBeArray()
             ->and($markets)->not->toBeEmpty();
@@ -190,7 +190,7 @@ describe('Markets integration scenarios', function () {
         $marketData = $this->loadFixture('market.json');
         $this->fakeHttp->addJsonResponse('GET', "/markets/{$firstMarketId}", $marketData);
 
-        $marketDetails = $this->client->markets()->get($firstMarketId);
+        $marketDetails = $this->client->gamma()->markets()->get($firstMarketId);
 
         expect($marketDetails)->toBeArray()
             ->and($marketDetails['id'])->toBe($firstMarketId);
@@ -205,7 +205,7 @@ describe('Markets integration scenarios', function () {
         $this->fakeHttp->addJsonResponse('GET', '/markets/search', $page1);
 
         // First page
-        $firstPage = $this->client->markets()->search('crypto', limit: 10);
+        $firstPage = $this->client->gamma()->markets()->search('crypto', limit: 10);
 
         expect($firstPage)->toBeArray();
         expect($this->fakeHttp->hasRequest('GET', '/markets/search'))->toBeTrue();

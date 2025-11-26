@@ -7,7 +7,7 @@ use Danielgnh\PolymarketPhp\Http\FakeGuzzleHttpClient;
 
 beforeEach(function () {
     $this->fakeHttp = new FakeGuzzleHttpClient();
-    $this->client = new Client(httpClient: $this->fakeHttp);
+    $this->client = new Client(gammaHttpClient: $this->fakeHttp, clobHttpClient: $this->fakeHttp);
 });
 
 describe('Orders::list()', function () {
@@ -16,7 +16,7 @@ describe('Orders::list()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders', $ordersData);
 
-        $result = $this->client->orders()->list();
+        $result = $this->client->clob()->orders()->list();
 
         expect($result)->toBeArray()
             ->and($result)->toHaveCount(2)
@@ -30,7 +30,7 @@ describe('Orders::list()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders', array_slice($ordersData, 0, 1));
 
-        $result = $this->client->orders()->list(limit: 1, offset: 0);
+        $result = $this->client->clob()->orders()->list(limit: 1, offset: 0);
 
         expect($result)->toHaveCount(1)
             ->and($result[0]['id'])->toBe('order_123456');
@@ -42,7 +42,7 @@ describe('Orders::list()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders', array_values($openOrders));
 
-        $result = $this->client->orders()->list(filters: ['status' => 'open']);
+        $result = $this->client->clob()->orders()->list(filters: ['status' => 'open']);
 
         expect($result)->toBeArray();
 
@@ -58,7 +58,7 @@ describe('Orders::list()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders', array_values($marketOrders));
 
-        $result = $this->client->orders()->list(filters: ['marketId' => $marketId]);
+        $result = $this->client->clob()->orders()->list(filters: ['marketId' => $marketId]);
 
         expect($result)->toBeArray();
 
@@ -70,7 +70,7 @@ describe('Orders::list()', function () {
     it('handles empty orders list', function () {
         $this->fakeHttp->addJsonResponse('GET', '/orders', []);
 
-        $result = $this->client->orders()->list();
+        $result = $this->client->clob()->orders()->list();
 
         expect($result)->toBeArray()
             ->and($result)->toBeEmpty();
@@ -83,7 +83,7 @@ describe('Orders::get()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders/order_123456', $orderData);
 
-        $result = $this->client->orders()->get('order_123456');
+        $result = $this->client->clob()->orders()->get('order_123456');
 
         expect($result)->toBeArray()
             ->and($result['id'])->toBe('order_123456')
@@ -96,7 +96,7 @@ describe('Orders::get()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders/order_123456', $orderData);
 
-        $result = $this->client->orders()->get('order_123456');
+        $result = $this->client->clob()->orders()->get('order_123456');
 
         expect($result)->toHaveKeys([
             'id',
@@ -119,7 +119,7 @@ describe('Orders::get()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders/order_123456', $orderData);
 
-        $result = $this->client->orders()->get('order_123456');
+        $result = $this->client->clob()->orders()->get('order_123456');
 
         // Verify decimal values are strings
         expect($result['price'])->toBeString()
@@ -143,7 +143,7 @@ describe('Orders::create()', function () {
             'size' => '50.00',
         ];
 
-        $result = $this->client->orders()->create($orderData);
+        $result = $this->client->clob()->orders()->create($orderData);
 
         expect($result)->toBeArray()
             ->and($result['id'])->toBe('order_new_001')
@@ -165,7 +165,7 @@ describe('Orders::create()', function () {
             'size' => '50.00',
         ];
 
-        $result = $this->client->orders()->create($orderData);
+        $result = $this->client->clob()->orders()->create($orderData);
 
         expect($result['side'])->toBe('buy');
     });
@@ -186,7 +186,7 @@ describe('Orders::create()', function () {
 
         $this->fakeHttp->addJsonResponse('POST', '/orders', $createdOrder, 201);
 
-        $result = $this->client->orders()->create($orderData);
+        $result = $this->client->clob()->orders()->create($orderData);
 
         expect($result['side'])->toBe('sell');
     });
@@ -196,7 +196,7 @@ describe('Orders::create()', function () {
 
         $this->fakeHttp->addJsonResponse('POST', '/orders', $createdOrder, 201);
 
-        $result = $this->client->orders()->create([
+        $result = $this->client->clob()->orders()->create([
             'marketId' => '0x1234567890abcdef',
             'outcome' => 'Yes',
             'side' => 'buy',
@@ -217,7 +217,7 @@ describe('Orders::cancel()', function () {
 
         $this->fakeHttp->addJsonResponse('DELETE', '/orders/order_123456', $cancelledOrder);
 
-        $result = $this->client->orders()->cancel('order_123456');
+        $result = $this->client->clob()->orders()->cancel('order_123456');
 
         expect($result)->toBeArray()
             ->and($result['id'])->toBe('order_123456')
@@ -230,7 +230,7 @@ describe('Orders::cancel()', function () {
 
         $this->fakeHttp->addJsonResponse('DELETE', '/orders/order_123456', $cancelledOrder);
 
-        $result = $this->client->orders()->cancel('order_123456');
+        $result = $this->client->clob()->orders()->cancel('order_123456');
 
         expect($result)->toHaveKeys([
             'id',
@@ -255,7 +255,7 @@ describe('Orders integration scenarios', function () {
             'size' => '50.00',
         ];
 
-        $created = $this->client->orders()->create($orderData);
+        $created = $this->client->clob()->orders()->create($orderData);
         $orderId = $created['id'];
 
         expect($orderId)->toBe('order_new_001');
@@ -264,7 +264,7 @@ describe('Orders integration scenarios', function () {
         $orderDetails = $this->loadFixture('order_created.json');
         $this->fakeHttp->addJsonResponse('GET', "/orders/{$orderId}", $orderDetails);
 
-        $fetched = $this->client->orders()->get($orderId);
+        $fetched = $this->client->clob()->orders()->get($orderId);
 
         expect($fetched['id'])->toBe($orderId)
             ->and($fetched['status'])->toBe('open');
@@ -275,7 +275,7 @@ describe('Orders integration scenarios', function () {
         $createdOrder = $this->loadFixture('order_created.json');
         $this->fakeHttp->addJsonResponse('POST', '/orders', $createdOrder, 201);
 
-        $created = $this->client->orders()->create([
+        $created = $this->client->clob()->orders()->create([
             'marketId' => '0x1234567890abcdef',
             'outcome' => 'Yes',
             'side' => 'buy',
@@ -292,7 +292,7 @@ describe('Orders integration scenarios', function () {
         ]);
         $this->fakeHttp->addJsonResponse('DELETE', "/orders/{$orderId}", $cancelledOrder);
 
-        $cancelled = $this->client->orders()->cancel($orderId);
+        $cancelled = $this->client->clob()->orders()->cancel($orderId);
 
         expect($cancelled['id'])->toBe($orderId)
             ->and($cancelled['status'])->toBe('cancelled')
@@ -306,7 +306,7 @@ describe('Orders integration scenarios', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/orders', array_values($marketOrders));
 
-        $orders = $this->client->orders()->list(filters: ['marketId' => $marketId]);
+        $orders = $this->client->clob()->orders()->list(filters: ['marketId' => $marketId]);
 
         expect($orders)->toBeArray();
 
