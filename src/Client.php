@@ -36,11 +36,19 @@ class Client
 
     public function gamma(): Gamma
     {
-        return $this->gammaClient ?? new Gamma($this->config);
+        if ($this->gammaClient === null) {
+            $this->gammaClient = new Gamma($this->config);
+        }
+
+        return $this->gammaClient;
     }
 
     public function clob(): Clob
     {
-        return $this->clobClient ?? new Clob($this->config);
+        if ($this->clobClient === null) {
+            $this->clobClient = new Clob($this->config);
+        }
+
+        return $this->clobClient;
     }
 }
