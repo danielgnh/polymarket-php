@@ -6,7 +6,7 @@ namespace Danielgnh\PolymarketPhp;
 
 use Danielgnh\PolymarketPhp\Http\GuzzleHttpClient;
 use Danielgnh\PolymarketPhp\Http\HttpClientInterface;
-use Danielgnh\PolymarketPhp\Resources\Markets;
+use Danielgnh\PolymarketPhp\Resources\Gamma\Markets;
 
 /**
  * Gamma API Client.

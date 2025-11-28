@@ -120,7 +120,7 @@ class FakeGuzzleHttpClient implements HttpClientInterface
             // Return a default 404 response if no mock is set
             $body = json_encode([
                 'error' => 'Not Found',
-                'message' => "No fake response set for [{$method} {$path}]",
+                'message' => "No fake response set for [$method $path]",
             ]);
 
             if ($body === false) {
