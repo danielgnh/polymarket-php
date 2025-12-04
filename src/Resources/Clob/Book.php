@@ -14,10 +14,40 @@ class Book extends Resource
      *
      * @throws PolymarketException
      */
-    public function get(string $token_id): array
+    public function get(string $tokenId): array
     {
-        return $this->httpClient->get('/book', ['token_id' => $token_id])->json();
+        return $this->httpClient->get('/book', ['token_id' => $tokenId])->json();
     }
 
-    // todo: there is one more way to get multiple books in one request, implement it here
+    /**
+     * @param array<int, array{token_id: string}> $params
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws PolymarketException
+     */
+    public function getMultiple(array $params): array
+    {
+        return $this->httpClient->post('/books', $params)->json();
+    }
+
+    /**
+     * @return array<string, mixed>
+     *
+     * @throws PolymarketException
+     */
+    public function getTickSize(string $tokenId): array
+    {
+        return $this->httpClient->get('/tick-size', ['token_id' => $tokenId])->json();
+    }
+
+    /**
+     * @return array<string, mixed>
+     *
+     * @throws PolymarketException
+     */
+    public function getNegRisk(string $tokenId): array
+    {
+        return $this->httpClient->get('/neg-risk', ['token_id' => $tokenId])->json();
+    }
 }
