@@ -162,17 +162,17 @@ class Eip712Signer
         return '0x' . Keccak::hash($encoded, 256);
     }
 
-	/**
-	 * Hash a struct according to EIP-712.
-	 *
-	 * @param string                                   $typeName
-	 * @param array<array{name: string, type: string}> $types
-	 * @param array<string, mixed>                     $data
-	 *
-	 * @return string
-	 *
-	 * @throws Exception
-	 */
+    /**
+     * Hash a struct according to EIP-712.
+     *
+     * @param string                                   $typeName
+     * @param array<array{name: string, type: string}> $types
+     * @param array<string, mixed>                     $data
+     *
+     * @return string
+     *
+     * @throws Exception
+     */
     private function hashStruct(string $typeName, array $types, array $data): string
     {
         $typeHash = $this->hashType($typeName, $types);
