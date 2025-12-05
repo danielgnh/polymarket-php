@@ -1,6 +1,6 @@
 # Polymarket PHP SDK
 
-A modern, type-safe PHP SDK for interacting with the [Polymarket API](https://polymarket.com). Built with PHP 8.4+, this SDK provides a clean and intuitive interface for accessing prediction market data and managing orders.
+A modern, type-safe PHP SDK for interacting with the [Polymarket API](https://polymarket.com). Built with PHP 8.1+, this SDK provides a clean and intuitive interface for accessing prediction market data and managing orders.
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/danielgnh/polymarket-php.svg?style=flat-square)](https://packagist.org/packages/danielgnh/polymarket-php)
 [![PHP Version](https://img.shields.io/packagist/php-v/danielgnh/polymarket-php.svg?style=flat-square)](https://packagist.org/packages/danielgnh/polymarket-php)
