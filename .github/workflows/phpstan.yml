@@ -9,6 +9,8 @@ on:
 jobs:
   phpstan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     name: PHPStan Analysis
 
