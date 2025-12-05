@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Danielgnh\PolymarketPhp\Client;
 use Danielgnh\PolymarketPhp\Clob;
 use Danielgnh\PolymarketPhp\Gamma;
-use Danielgnh\PolymarketPhp\Resources\Markets;
-use Danielgnh\PolymarketPhp\Resources\Orders;
+use Danielgnh\PolymarketPhp\Resources\Clob\Orders;
+use Danielgnh\PolymarketPhp\Resources\Gamma\Markets;
 
 it('creates client with default configuration', function () {
     $client = new Client();

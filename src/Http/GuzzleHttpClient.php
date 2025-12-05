@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Danielgnh\PolymarketPhp\Http;
 
+use Danielgnh\PolymarketPhp\Auth\ClobAuthenticator;
 use Danielgnh\PolymarketPhp\Config;
 use Danielgnh\PolymarketPhp\Exceptions\ApiException;
 use Danielgnh\PolymarketPhp\Exceptions\AuthenticationException;
+use Danielgnh\PolymarketPhp\Exceptions\ClobAuthenticationException;
 use Danielgnh\PolymarketPhp\Exceptions\NotFoundException;
 use Danielgnh\PolymarketPhp\Exceptions\PolymarketException;
 use Danielgnh\PolymarketPhp\Exceptions\RateLimitException;
@@ -19,15 +21,27 @@ class GuzzleHttpClient implements HttpClientInterface
 {
     private GuzzleClient $client;
 
+    private ?ClobAuthenticator $authenticator;
+
     public function __construct(
         private readonly string $baseUrl,
-        private readonly Config $config
+        private readonly Config $config,
+        ?ClobAuthenticator $authenticator = null
     ) {
+        $this->authenticator = $authenticator;
         $this->client = new GuzzleClient([
             'base_uri' => $this->baseUrl,
             'timeout' => $this->config->timeout,
             'headers' => $this->getDefaultHeaders(),
         ]);
+    }
+
+    /**
+     * Set authenticator (for late binding).
+     */
+    public function auth(ClobAuthenticator $authenticator): void
+    {
+        $this->authenticator = $authenticator;
     }
 
     /**
@@ -57,9 +71,11 @@ class GuzzleHttpClient implements HttpClientInterface
     /**
      * @throws PolymarketException
      */
-    public function delete(string $path): Response
+    public function delete(string $path, array $data = []): Response
     {
-        return $this->request('DELETE', $path);
+        $options = empty($data) ? [] : ['json' => $data];
+
+        return $this->request('DELETE', $path, $options);
     }
 
     /**
@@ -76,6 +92,12 @@ class GuzzleHttpClient implements HttpClientInterface
      */
     private function request(string $method, string $path, array $options = []): Response
     {
+        $authHeaders = $this->getAuthHeaders($method, $path, $options);
+        $options['headers'] = array_merge(
+            $options['headers'] ?? [],
+            $authHeaders
+        );
+
         try {
             $response = $this->client->request($method, $path, $options);
 
@@ -106,6 +128,39 @@ class GuzzleHttpClient implements HttpClientInterface
     }
 
     /**
+     * Get authentication headers based on base URL and authenticator.
+     *
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, string>
+     * @throws ClobAuthenticationException
+     */
+    private function getAuthHeaders(string $method, string $path, array $options): array
+    {
+        // CLOB API: Use L2 authentication if available
+        if ($this->isClobApi() && $this->authenticator?->hasCredentials()) {
+            $body = null;
+            if (isset($options['json'])) {
+                $encoded = json_encode($options['json']);
+                $body = $encoded !== false ? $encoded : null;
+            }
+
+            return $this->authenticator->generateL2Headers(
+                $method,
+                $path,
+                $body
+            );
+        }
+
+        return [];
+    }
+
+    private function isClobApi(): bool
+    {
+        return str_contains($this->baseUrl, 'clob.polymarket.com');
+    }
+
+    /**
      * @return array<string, string>
      */
     private function getDefaultHeaders(): array
@@ -116,7 +171,7 @@ class GuzzleHttpClient implements HttpClientInterface
             'User-Agent' => 'polymarket-php-sdk/1.0',
         ];
 
-        if ($this->config->apiKey !== null) {
+        if (!$this->isClobApi() && $this->config->apiKey !== null) {
             $headers['Authorization'] = 'Bearer ' . $this->config->apiKey;
         }
 

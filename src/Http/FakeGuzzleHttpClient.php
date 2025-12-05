@@ -15,7 +15,7 @@ class FakeGuzzleHttpClient implements HttpClientInterface
     /** @var array<string, Response> */
     private array $responses = [];
 
-    /** @var array<string, array{method: string, path: string, data: array<string, mixed>}> */
+    /** @var array<string, array{method: string, path: string, data: array<int|string, mixed>}> */
     private array $requests = [];
 
     public function get(string $path, array $query = []): Response
@@ -39,9 +39,9 @@ class FakeGuzzleHttpClient implements HttpClientInterface
         return $this->getResponse('PUT', $path);
     }
 
-    public function delete(string $path): Response
+    public function delete(string $path, array $data = []): Response
     {
-        $this->recordRequest('DELETE', $path, []);
+        $this->recordRequest('DELETE', $path, $data);
 
         return $this->getResponse('DELETE', $path);
     }
@@ -97,7 +97,7 @@ class FakeGuzzleHttpClient implements HttpClientInterface
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param array<int|string, mixed> $data
      */
     private function recordRequest(string $method, string $path, array $data): void
     {
@@ -120,7 +120,7 @@ class FakeGuzzleHttpClient implements HttpClientInterface
             // Return a default 404 response if no mock is set
             $body = json_encode([
                 'error' => 'Not Found',
-                'message' => "No fake response set for [{$method} {$path}]",
+                'message' => "No fake response set for [$method $path]",
             ]);
 
             if ($body === false) {

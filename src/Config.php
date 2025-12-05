@@ -18,6 +18,10 @@ readonly class Config
 
     public bool $verifySSL;
 
+    public ?string $privateKey;
+
+    public int $chainId;
+
     /**
      * @param array<string, mixed> $options
      */
@@ -29,5 +33,7 @@ readonly class Config
         $this->timeout = $options['timeout'] ?? 30;
         $this->retries = $options['retries'] ?? 3;
         $this->verifySSL = $options['verify_ssl'] ?? true;
+        $this->privateKey = $options['private_key'] ?? ($_ENV['POLYMARKET_PRIVATE_KEY'] ?? null);
+        $this->chainId = $options['chain_id'] ?? 137;
     }
 }
