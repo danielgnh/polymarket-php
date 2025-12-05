@@ -28,18 +28,6 @@ class Trades extends Resource
      *
      * @throws PolymarketException
      */
-    public function listPaginated(array $params = []): array
-    {
-        return $this->httpClient->get('/trades', $params)->json();
-    }
-
-    /**
-     * @param array<string, mixed> $params
-     *
-     * @return array<string, mixed>
-     *
-     * @throws PolymarketException
-     */
     public function getBuilderTrades(array $params = []): array
     {
         return $this->httpClient->get('/builder-trades', $params)->json();
