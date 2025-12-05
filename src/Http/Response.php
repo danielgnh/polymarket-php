@@ -7,15 +7,15 @@ namespace Danielgnh\PolymarketPhp\Http;
 use Danielgnh\PolymarketPhp\Exceptions\JsonParseException;
 use JsonException;
 
-readonly class Response
+class Response
 {
     /**
      * @param array<string, mixed> $headers
      */
     public function __construct(
-        private int $statusCode,
-        private array $headers,
-        private string $body
+        private readonly int $statusCode,
+        private readonly array $headers,
+        private readonly string $body
     ) {}
 
     /**
