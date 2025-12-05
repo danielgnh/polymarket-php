@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Danielgnh\PolymarketPhp;
 
-readonly class Config
+class Config
 {
-    public string $gammaBaseUrl;
+    public readonly string $gammaBaseUrl;
 
-    public string $clobBaseUrl;
+    public readonly string $clobBaseUrl;
 
-    public ?string $apiKey;
+    public readonly ?string $apiKey;
 
-    public int $timeout;
+    public readonly int $timeout;
 
-    public int $retries;
+    public readonly int $retries;
 
-    public bool $verifySSL;
+    public readonly bool $verifySSL;
 
     /**
      * @param array<string, mixed> $options
