@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Danielgnh\PolymarketPhp\Resources;
+namespace Danielgnh\PolymarketPhp\Resources\Gamma;
 
 use Danielgnh\PolymarketPhp\Exceptions\PolymarketException;
+use Danielgnh\PolymarketPhp\Resources\Resource;
 
-class Orders extends Resource
+class Markets extends Resource
 {
     /**
      * @param array<string, mixed> $filters
@@ -17,7 +18,7 @@ class Orders extends Resource
      */
     public function list(array $filters = [], int $limit = 100, int $offset = 0): array
     {
-        $response = $this->httpClient->get('/orders', [
+        $response = $this->httpClient->get('/markets', [
             'limit' => $limit,
             'offset' => $offset,
             ...$filters,
@@ -32,35 +33,29 @@ class Orders extends Resource
      *
      * @throws PolymarketException
      */
-    public function get(string $orderId): array
+    public function get(string $marketId): array
     {
-        $response = $this->httpClient->get("/orders/{$orderId}");
+        $response = $this->httpClient->get("/markets/$marketId");
 
         return $response->json();
     }
 
     /**
-     * @param array<string, mixed> $orderData
+     * @param array<string, mixed> $filters
      *
-     * @return array<string, mixed>
+     * @return array<int, array<string, mixed>>
      *
      * @throws PolymarketException
      */
-    public function create(array $orderData): array
+    public function search(string $query, array $filters = [], int $limit = 100): array
     {
-        $response = $this->httpClient->post('/orders', $orderData);
+        $response = $this->httpClient->get('/markets/search', [
+            'query' => $query,
+            'limit' => $limit,
+            ...$filters,
+        ]);
 
-        return $response->json();
-    }
-
-    /**
-     * @return array<string, mixed>
-     * @throws PolymarketException
-     */
-    public function cancel(string $orderId): array
-    {
-        $response = $this->httpClient->delete("/orders/{$orderId}");
-
+        /** @var array<int, array<string, mixed>> */
         return $response->json();
     }
 }

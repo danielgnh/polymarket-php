@@ -6,9 +6,15 @@
     "type": "library",
     "require": {
         "php": "^8.1",
+        "ext-gmp": "*",
         "guzzlehttp/guzzle": "^7.0",
-        "psr/http-factory": "^1.0",
+        "kornrunner/ethereum-address": "^0.4.0",
+        "kornrunner/ethereum-util": "^0.2.0",
+        "kornrunner/keccak": "^1.1",
+        "kornrunner/secp256k1": "^0.3.0",
+        "phpseclib/phpseclib": "^3.0",
         "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
         "psr/log": "^3.0"
     },
     "require-dev": {
