@@ -25,7 +25,7 @@ class Pricing extends Resource
     /**
      * @param array<int, array{token_id: string, side: string}> $params
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws PolymarketException
      */
@@ -47,7 +47,7 @@ class Pricing extends Resource
     /**
      * @param array<int, array{token_id: string}> $params
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws PolymarketException
      */
@@ -69,7 +69,7 @@ class Pricing extends Resource
     /**
      * @param array<int, array{token_id: string}> $params
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws PolymarketException
      */
@@ -81,7 +81,7 @@ class Pricing extends Resource
     /**
      * @param array<string, mixed> $params
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws PolymarketException
      */

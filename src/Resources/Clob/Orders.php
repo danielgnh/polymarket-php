@@ -12,7 +12,7 @@ class Orders extends Resource
     /**
      * @param array<string, mixed> $filters
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws PolymarketException
      */
@@ -85,6 +85,8 @@ class Orders extends Resource
     }
 
     /**
+     * @param string|array<string, mixed> $orderIdOrPayload
+     *
      * @return array<string, mixed>
      *
      * @throws PolymarketException

@@ -15,7 +15,7 @@ interface HttpClientInterface
     public function get(string $path, array $query = []): Response;
 
     /**
-     * @param array<string, mixed> $data
+     * @param array<int|string, mixed> $data
      *
      * @throws PolymarketException
      */
@@ -29,9 +29,11 @@ interface HttpClientInterface
     public function put(string $path, array $data = []): Response;
 
     /**
+     * @param array<string, mixed> $data
+     *
      * @throws PolymarketException
      */
-    public function delete(string $path): Response;
+    public function delete(string $path, array $data = []): Response;
 
     /**
      * @param array<string, mixed> $data

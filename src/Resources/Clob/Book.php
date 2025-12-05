@@ -22,7 +22,7 @@ class Book extends Resource
     /**
      * @param array<int, array{token_id: string}> $params
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws PolymarketException
      */

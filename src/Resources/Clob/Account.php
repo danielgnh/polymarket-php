@@ -34,7 +34,7 @@ class Account extends Resource
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws PolymarketException
      */

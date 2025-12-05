@@ -12,7 +12,7 @@ class Trades extends Resource
     /**
      * @param array<string, mixed> $params
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws PolymarketException
      */

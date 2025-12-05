@@ -71,9 +71,11 @@ class GuzzleHttpClient implements HttpClientInterface
     /**
      * @throws PolymarketException
      */
-    public function delete(string $path): Response
+    public function delete(string $path, array $data = []): Response
     {
-        return $this->request('DELETE', $path);
+        $options = empty($data) ? [] : ['json' => $data];
+
+        return $this->request('DELETE', $path, $options);
     }
 
     /**
