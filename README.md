@@ -2,18 +2,9 @@
 
 A modern, type-safe PHP SDK for interacting with the [Polymarket API](https://polymarket.com). Built with PHP 8.4+, this SDK provides a clean and intuitive interface for accessing prediction market data and managing orders.
 
-## Features
-
-- **Type-Safe**: Built with strict types and modern PHP 8.4+ features
-- **PSR Standards**: Follows PSR-12 coding standards and PSR-18 HTTP client interface
-- **Comprehensive Error Handling**: Detailed exception hierarchy for different error scenarios
-- **Easy to Use**: Fluent, intuitive API design
-- **Well Tested**: Includes PHPUnit tests and PHPStan static analysis
-- **Configurable**: Flexible configuration options with sensible defaults
-
 ## Requirements
 
-- PHP 8.4 or higher
+- PHP 8.1 or higher
 - Composer
 
 ## Installation
