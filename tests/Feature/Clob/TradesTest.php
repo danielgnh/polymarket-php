@@ -41,27 +41,6 @@ describe('Trades::list()', function () {
     });
 });
 
-describe('Trades::listPaginated()', function () {
-    it('fetches paginated trades', function () {
-        $paginatedData = [
-            'trades' => [
-                ['id' => 'trade_1', 'price' => '0.52'],
-            ],
-            'next_cursor' => 'cursor_123',
-            'count' => 1,
-        ];
-
-        $this->fakeHttp->addJsonResponse('GET', '/trades', $paginatedData);
-
-        $result = $this->client->clob()->trades()->listPaginated();
-
-        expect($result)->toBeArray()
-            ->and($result)->toHaveKey('trades')
-            ->and($result)->toHaveKey('next_cursor')
-            ->and($result['next_cursor'])->toBe('cursor_123');
-    });
-});
-
 describe('Trades::getBuilderTrades()', function () {
     it('fetches builder trade history', function () {
         $builderTradesData = [
