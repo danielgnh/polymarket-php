@@ -127,50 +127,34 @@ describe('Markets::get()', function () {
     });
 });
 
-describe('Markets::search()', function () {
-    it('searches markets by query', function () {
-        $searchResults = $this->loadFixture('markets_search.json');
+describe('Markets::getBySlug()', function () {
+    it('fetches market by slug', function () {
+        $marketData = $this->loadFixture('market.json');
 
-        $this->fakeHttp->addJsonResponse('GET', '/markets/search', $searchResults);
+        $this->fakeHttp->addJsonResponse('GET', '/markets/slug/bitcoin-100k-2025', $marketData);
 
-        $result = $this->client->gamma()->markets()->search('Bitcoin');
-
-        expect($result)->toBeArray()
-            ->and($result)->toHaveCount(1)
-            ->and($result[0]['question'])->toContain('Bitcoin');
-    });
-
-    it('applies limit to search results', function () {
-        $searchResults = $this->loadFixture('markets_search.json');
-
-        $this->fakeHttp->addJsonResponse('GET', '/markets/search', $searchResults);
-
-        $result = $this->client->gamma()->markets()->search('Bitcoin', limit: 1);
-
-        expect($result)->toHaveCount(1);
-    });
-
-    it('applies filters to search', function () {
-        $searchResults = $this->loadFixture('markets_search.json');
-
-        $this->fakeHttp->addJsonResponse('GET', '/markets/search', $searchResults);
-
-        $result = $this->client->gamma()->markets()->search('Bitcoin', filters: ['active' => true]);
-
-        expect($result)->toBeArray();
-
-        foreach ($result as $market) {
-            expect($market['active'])->toBeTrue();
-        }
-    });
-
-    it('handles empty search results', function () {
-        $this->fakeHttp->addJsonResponse('GET', '/markets/search', []);
-
-        $result = $this->client->gamma()->markets()->search('NonexistentMarket');
+        $result = $this->client->gamma()->markets()->getBySlug('bitcoin-100k-2025');
 
         expect($result)->toBeArray()
-            ->and($result)->toBeEmpty();
+            ->and($result['id'])->toBe('0x1234567890abcdef')
+            ->and($result['question'])->toBe('Will Bitcoin reach $100k by end of 2025?');
+    });
+});
+
+describe('Markets::tags()', function () {
+    it('fetches market tags', function () {
+        $tagsData = [
+            ['id' => 'tag1', 'label' => 'Crypto'],
+            ['id' => 'tag2', 'label' => 'Bitcoin'],
+        ];
+
+        $this->fakeHttp->addJsonResponse('GET', '/markets/0x1234567890abcdef/tags', $tagsData);
+
+        $result = $this->client->gamma()->markets()->tags('0x1234567890abcdef');
+
+        expect($result)->toBeArray()
+            ->and($result)->toHaveCount(2)
+            ->and($result[0]['label'])->toBe('Crypto');
     });
 });
 
@@ -198,16 +182,5 @@ describe('Markets integration scenarios', function () {
         // Verify both requests were made
         expect($this->fakeHttp->hasRequest('GET', '/markets'))->toBeTrue();
         expect($this->fakeHttp->hasRequest('GET', "/markets/{$firstMarketId}"))->toBeTrue();
-    });
-
-    it('can search and paginate through results', function () {
-        $page1 = $this->loadFixture('markets_search.json');
-        $this->fakeHttp->addJsonResponse('GET', '/markets/search', $page1);
-
-        // First page
-        $firstPage = $this->client->gamma()->markets()->search('crypto', limit: 10);
-
-        expect($firstPage)->toBeArray();
-        expect($this->fakeHttp->hasRequest('GET', '/markets/search'))->toBeTrue();
     });
 });
