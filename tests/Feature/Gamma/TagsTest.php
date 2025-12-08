@@ -98,7 +98,7 @@ describe('Tags::relatedTagsTags()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/tags/tag1/related-tags/tags', $relatedTagsData);
 
-        $result = $this->client->gamma()->tags()->relatedTagsTags('tag1');
+        $result = $this->client->gamma()->tags()->getTagsRelatedToTag('tag1');
 
         expect($result)->toBeArray()
             ->and($result)->toHaveCount(2);
@@ -114,7 +114,7 @@ describe('Tags::relatedTagsTagsBySlug()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/tags/slug/crypto/related-tags/tags', $relatedTagsData);
 
-        $result = $this->client->gamma()->tags()->relatedTagsTagsBySlug('crypto');
+        $result = $this->client->gamma()->tags()->getTagsRelatedToTagBySlug('crypto');
 
         expect($result)->toBeArray()
             ->and($result)->toHaveCount(2);

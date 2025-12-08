@@ -89,7 +89,7 @@ class Tags extends Resource
      *
      * @throws PolymarketException
      */
-    public function relatedTagsTags(string $tagId): array
+    public function getTagsRelatedToTag(string $tagId): array
     {
         $response = $this->httpClient->get("/tags/$tagId/related-tags/tags");
 
@@ -104,7 +104,7 @@ class Tags extends Resource
      *
      * @throws PolymarketException
      */
-    public function relatedTagsTagsBySlug(string $slug): array
+    public function getTagsRelatedToTagBySlug(string $slug): array
     {
         $response = $this->httpClient->get("/tags/slug/$slug/related-tags/tags");
 

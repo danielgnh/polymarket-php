@@ -59,7 +59,7 @@ class Events extends Resource
     }
 
     /**
-     * Get event tags.
+     * Get all tags associated with a specific event.
      *
      * @return array<int, array<string, mixed>>
      *

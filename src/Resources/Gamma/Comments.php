@@ -25,7 +25,7 @@ class Comments extends Resource
     }
 
     /**
-     * Get comments by ID.
+     * Get comment by ID.
      *
      * @return array<string, mixed>
      *

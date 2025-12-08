@@ -55,7 +55,7 @@ class Markets extends Resource
     }
 
     /**
-     * Get market tags.
+     * Get all tags associated with a specific market.
      *
      * @return array<int, array<string, mixed>>
      *
