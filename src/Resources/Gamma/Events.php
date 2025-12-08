@@ -7,9 +7,11 @@ namespace Danielgnh\PolymarketPhp\Resources\Gamma;
 use Danielgnh\PolymarketPhp\Exceptions\PolymarketException;
 use Danielgnh\PolymarketPhp\Resources\Resource;
 
-class Markets extends Resource
+class Events extends Resource
 {
     /**
+     * List events with pagination.
+     *
      * @param array<string, mixed> $filters
      *
      * @return array<int, array<string, mixed>>
@@ -18,7 +20,7 @@ class Markets extends Resource
      */
     public function list(array $filters = [], int $limit = 100, int $offset = 0): array
     {
-        $response = $this->httpClient->get('/markets', [
+        $response = $this->httpClient->get('/events', [
             'limit' => $limit,
             'offset' => $offset,
             ...$filters,
@@ -29,19 +31,21 @@ class Markets extends Resource
     }
 
     /**
+     * Get event by ID.
+     *
      * @return array<string, mixed>
      *
      * @throws PolymarketException
      */
-    public function get(string $marketId): array
+    public function get(string $eventId): array
     {
-        $response = $this->httpClient->get("/markets/$marketId");
+        $response = $this->httpClient->get("/events/$eventId");
 
         return $response->json();
     }
 
     /**
-     * Get market by slug.
+     * Get event by slug.
      *
      * @return array<string, mixed>
      *
@@ -49,21 +53,21 @@ class Markets extends Resource
      */
     public function getBySlug(string $slug): array
     {
-        $response = $this->httpClient->get("/markets/slug/$slug");
+        $response = $this->httpClient->get("/events/slug/$slug");
 
         return $response->json();
     }
 
     /**
-     * Get all tags associated with a specific market.
+     * Get all tags associated with a specific event.
      *
      * @return array<int, array<string, mixed>>
      *
      * @throws PolymarketException
      */
-    public function tags(string $marketId): array
+    public function tags(string $eventId): array
     {
-        $response = $this->httpClient->get("/markets/$marketId/tags");
+        $response = $this->httpClient->get("/events/$eventId/tags");
 
         /** @var array<int, array<string, mixed>> */
         return $response->json();
