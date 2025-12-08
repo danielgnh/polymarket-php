@@ -16,12 +16,6 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
-    <coverage>
-        <report>
-            <html outputDirectory="coverage"/>
-            <text outputFile="php://stdout"/>
-        </report>
-    </coverage>
     <source>
         <include>
             <directory>src</directory>
