@@ -41,7 +41,7 @@
         }
     ],
     "scripts": {
-        "test": "pest",
+        "test": "pest --parallel",
         "test-coverage": "pest --coverage",
         "phpstan": "phpstan analyse",
         "cs-fix": "php-cs-fixer fix",
