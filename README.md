@@ -41,6 +41,224 @@ $results = $client->gamma()->markets()->search('election');
 $orders = $client->clob()->orders()->list(limit: 10);
 ```
 
+## Laravel Integration
+
+The Polymarket PHP SDK provides first-class Laravel support with automatic service container integration, facade access, and configuration management.
+
+### Installation in Laravel
+
+```bash
+composer require danielgnh/polymarket-php
+```
+
+The service provider is automatically registered via Laravel's package auto-discovery. No manual registration required!
+
+### Configuration
+
+Publish the configuration file:
+
+```bash
+php artisan vendor:publish --tag=polymarket-config
+```
+
+This creates `config/polymarket.php`. Configure your credentials in `.env`:
+
+```env
+POLYMARKET_API_KEY=your-api-key
+POLYMARKET_PRIVATE_KEY=0x1234567890abcdef...
+POLYMARKET_CHAIN_ID=137
+POLYMARKET_TIMEOUT=30
+POLYMARKET_RETRIES=3
+```
+
+### Usage with Dependency Injection
+
+Inject the client directly into your controllers, services, or jobs:
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use Danielgnh\PolymarketPhp\Client;
+use Illuminate\Http\JsonResponse;
+
+class MarketController extends Controller
+{
+    public function __construct(
+        private readonly Client $polymarket
+    ) {}
+
+    public function index(): JsonResponse
+    {
+        $markets = $this->polymarket
+            ->gamma()
+            ->markets()
+            ->list(['active' => true], limit: 10);
+
+        return response()->json($markets);
+    }
+
+    public function placeOrder(): JsonResponse
+    {
+        // Authenticate for trading operations
+        $this->polymarket->auth();
+
+        $order = $this->polymarket
+            ->clob()
+            ->orders()
+            ->create([
+                'market_id' => 'market-id',
+                'side' => 'buy',
+                'type' => 'gtc',
+                'price' => '0.52',
+                'amount' => '10.00',
+            ]);
+
+        return response()->json($order);
+    }
+}
+```
+
+### Usage with Facade
+
+For quick access anywhere in your Laravel application:
+
+```php
+<?php
+
+use Danielgnh\PolymarketPhp\Laravel\Facades\Polymarket;
+
+// Get active markets
+$markets = Polymarket::gamma()->markets()->list(['active' => true]);
+
+// Search markets
+$results = Polymarket::gamma()->markets()->search('election');
+
+// Place orders (requires authentication)
+Polymarket::auth();
+$order = Polymarket::clob()->orders()->create([...]);
+```
+
+### Using in Artisan Commands
+
+```php
+<?php
+
+namespace App\Console\Commands;
+
+use Danielgnh\PolymarketPhp\Client;
+use Illuminate\Console\Command;
+
+class FetchMarkets extends Command
+{
+    protected $signature = 'polymarket:fetch-markets';
+    protected $description = 'Fetch active markets from Polymarket';
+
+    public function handle(Client $polymarket): int
+    {
+        $this->info('Fetching markets...');
+
+        $markets = $polymarket
+            ->gamma()
+            ->markets()
+            ->list(['active' => true]);
+
+        $this->table(
+            ['ID', 'Question', 'Volume'],
+            collect($markets)->map(fn($m) => [
+                $m['id'],
+                $m['question'],
+                $m['volume'] ?? 'N/A',
+            ])
+        );
+
+        return self::SUCCESS;
+    }
+}
+```
+
+### Using in Queued Jobs
+
+```php
+<?php
+
+namespace App\Jobs;
+
+use Danielgnh\PolymarketPhp\Client;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+
+class PlaceMarketOrder implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable;
+
+    public function __construct(
+        private readonly array $orderData
+    ) {}
+
+    public function handle(Client $polymarket): void
+    {
+        $polymarket->auth();
+
+        $order = $polymarket
+            ->clob()
+            ->orders()
+            ->create($this->orderData);
+
+        // Process order result...
+    }
+}
+```
+
+### Configuration Reference
+
+All Laravel configuration options:
+
+| Config Key | Environment Variable | Default | Description |
+|------------|---------------------|---------|-------------|
+| `api_key` | `POLYMARKET_API_KEY` | `null` | API key for authenticated requests |
+| `private_key` | `POLYMARKET_PRIVATE_KEY` | `null` | Ethereum private key for trading |
+| `chain_id` | `POLYMARKET_CHAIN_ID` | `137` | Blockchain chain ID (Polygon) |
+| `gamma_base_url` | `POLYMARKET_GAMMA_URL` | `https://gamma-api.polymarket.com` | Gamma API base URL |
+| `clob_base_url` | `POLYMARKET_CLOB_URL` | `https://clob.polymarket.com` | CLOB API base URL |
+| `timeout` | `POLYMARKET_TIMEOUT` | `30` | Request timeout (seconds) |
+| `retries` | `POLYMARKET_RETRIES` | `3` | Retry attempts on failure |
+| `verify_ssl` | `POLYMARKET_VERIFY_SSL` | `true` | Verify SSL certificates |
+| `auto_authenticate` | `POLYMARKET_AUTO_AUTH` | `false` | Auto-authenticate on boot |
+
+### Testing with Laravel
+
+Use Laravel's testing tools to mock the client in your tests:
+
+```php
+<?php
+
+use Danielgnh\PolymarketPhp\Client;
+use Danielgnh\PolymarketPhp\Gamma;
+
+test('market controller returns markets', function () {
+    $mockGamma = Mockery::mock(Gamma::class);
+    $mockGamma->shouldReceive('markets->list')
+        ->once()
+        ->andReturn([['id' => '1', 'question' => 'Test?']]);
+
+    $mockClient = Mockery::mock(Client::class);
+    $mockClient->shouldReceive('gamma')
+        ->once()
+        ->andReturn($mockGamma);
+
+    $this->app->instance(Client::class, $mockClient);
+
+    $response = $this->get('/api/markets');
+
+    $response->assertOk()
+        ->assertJson([['id' => '1', 'question' => 'Test?']]);
+});
+```
+
 ## API Architecture
 
 Polymarket uses two separate API systems:
