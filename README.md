@@ -1,6 +1,11 @@
 # Polymarket PHP SDK
 
-A modern, type-safe PHP SDK for interacting with the [Polymarket API](https://polymarket.com). Built with PHP 8.1+, this SDK provides a clean and intuitive interface for accessing prediction market data and managing orders.
+[Polymarket API](https://polymarket.com) PHP SDK for interacting with the prediction markets and managing orders.
+
+You can search for the markets, events, create / delete orders and much more.
+
+[What is polymarket?](https://docs.polymarket.com/polymarket-learn/get-started/what-is-polymarket)
+
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/danielgnh/polymarket-php.svg?style=flat-square)](https://packagist.org/packages/danielgnh/polymarket-php)
 [![PHP Version](https://img.shields.io/packagist/php-v/danielgnh/polymarket-php.svg?style=flat-square)](https://packagist.org/packages/danielgnh/polymarket-php)
@@ -22,6 +27,17 @@ Install the package via Composer:
 composer require danielgnh/polymarket-php
 ```
 
+## Configuration
+
+Add your polymarket credentials to your `.env` file:
+
+```env
+POLYMARKET_API_KEY=your-api-key
+POLYMARKET_PRIVATE_KEY=0x...
+```
+
+Here is documentation [how to export you private key](https://docs.polymarket.com/polymarket-learn/FAQ/how-to-export-private-key)
+
 ## Quick Start
 
 ```php
@@ -29,16 +45,16 @@ composer require danielgnh/polymarket-php
 
 use Danielgnh\PolymarketPhp\Client;
 
-// Initialize the client
-$client = new Client('your-api-key');
+/*
+* Let's initialize the client.
+* In case if you defined the POLYMARKET_API_KEY you don't need to pass any parameters in Client
+*/
+$client = new Client();
 
-// Gamma API - Market Data
-$markets = $client->gamma()->markets()->list(['active' => true], limit: 10);
-$market = $client->gamma()->markets()->get('market-id');
-$results = $client->gamma()->markets()->search('election');
-
-// CLOB API - Trading Operations
-$orders = $client->clob()->orders()->list(limit: 10);
+/*
+* In case if you want to define any other API Key, you can do it as well.
+*/
+$client = new Client('api-key');
 ```
 
 ## API Architecture
@@ -51,16 +67,12 @@ Polymarket uses two separate API systems:
 The SDK provides separate client interfaces for each:
 
 ```php
-$client = new Client('your-api-key');
-
-// Access Gamma API for market data
+/* Market data */
 $client->gamma()->markets()->list();
 
-// Access CLOB API for trading
+/* Trading & Orders */
 $client->clob()->orders()->create([...]);
 ```
-
-This separation ensures type safety and prevents accidentally calling the wrong API endpoint.
 
 ## API Reference
 
@@ -69,10 +81,7 @@ This separation ensures type safety and prevents accidentally calling the wrong 
 ```php
 use Danielgnh\PolymarketPhp\Client;
 
-// Basic initialization
-$client = new Client('your-api-key');
-
-// With custom configuration
+/* There is a way to initialize the client with custom configuration */
 $client = new Client('your-api-key', [
     'gamma_base_url' => 'https://gamma-api.polymarket.com',
     'clob_base_url' => 'https://clob.polymarket.com',
@@ -80,10 +89,19 @@ $client = new Client('your-api-key', [
     'retries' => 3,
     'verify_ssl' => true,
 ]);
-
-// Without API key (for public endpoints only)
-$client = new Client();
 ```
+
+### Configuration Options
+
+The SDK supports the following configuration options:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `gamma_base_url` | string | `https://gamma-api.polymarket.com` | Gamma API base URL |
+| `clob_base_url` | string | `https://clob.polymarket.com` | CLOB API base URL |
+| `timeout` | int | `30` | Request timeout in seconds |
+| `retries` | int | `3` | Number of retry attempts for failed requests |
+| `verify_ssl` | bool | `true` | Whether to verify SSL certificates |
 
 ### Markets (Gamma API)
 
@@ -204,29 +222,6 @@ $result = $client->clob()->orders()->cancel('order-id');
 
 **Returns:** Cancellation result data
 
-## Configuration Options
-
-The SDK supports the following configuration options:
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `gamma_base_url` | string | `https://gamma-api.polymarket.com` | Gamma API base URL |
-| `clob_base_url` | string | `https://clob.polymarket.com` | CLOB API base URL |
-| `timeout` | int | `30` | Request timeout in seconds |
-| `retries` | int | `3` | Number of retry attempts for failed requests |
-| `verify_ssl` | bool | `true` | Whether to verify SSL certificates |
-
-Example with custom configuration:
-
-```php
-$client = new Client('your-api-key', [
-    'timeout' => 60,
-    'retries' => 5,
-    'gamma_base_url' => 'https://custom-gamma.example.com',
-    'clob_base_url' => 'https://custom-clob.example.com',
-]);
-```
-
 ## Error Handling
 
 The SDK provides a comprehensive exception hierarchy for handling different error scenarios:
@@ -268,17 +263,7 @@ try {
 }
 ```
 
-### Exception Hierarchy
-
-- `PolymarketException` - Base exception for all SDK errors
-  - `AuthenticationException` - Authentication/authorization failures (401, 403)
-  - `ValidationException` - Request validation errors (400, 422)
-  - `RateLimitException` - Rate limit exceeded (429)
-  - `NotFoundException` - Resource not found (404)
-  - `ApiException` - Other API errors (5xx)
-  - `JsonParseException` - JSON parsing errors
-
-## Type-Safe Enums
+## Enums
 
 The SDK provides type-safe enums for API fields with fixed value sets, ensuring compile-time safety and better IDE autocomplete.
 
