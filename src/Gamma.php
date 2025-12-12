@@ -11,7 +11,6 @@ use Danielgnh\PolymarketPhp\Resources\Gamma\Comments;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Events;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Health;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Markets;
-use Danielgnh\PolymarketPhp\Resources\Gamma\Search;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Series;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Sports;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Tags;
