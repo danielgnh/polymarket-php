@@ -27,7 +27,7 @@ class Config
      */
     public function __construct(?string $apiKey = null, array $options = [])
     {
-        $this->apiKey = $apiKey;
+        $this->apiKey = $apiKey ?? ($_ENV['POLYMARKET_API_KEY'] ?? null);
         $this->gammaBaseUrl = $options['gamma_base_url'] ?? 'https://gamma-api.polymarket.com';
         $this->clobBaseUrl = $options['clob_base_url'] ?? 'https://clob.polymarket.com';
         $this->timeout = $options['timeout'] ?? 30;
