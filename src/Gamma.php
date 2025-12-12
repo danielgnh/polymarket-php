@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Danielgnh\PolymarketPhp;
 
+use Danielgnh\PolymarketPhp\Exceptions\PolymarketException;
 use Danielgnh\PolymarketPhp\Http\GuzzleHttpClient;
 use Danielgnh\PolymarketPhp\Http\HttpClientInterface;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Comments;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Events;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Health;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Markets;
-use Danielgnh\PolymarketPhp\Resources\Gamma\Search;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Series;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Sports;
 use Danielgnh\PolymarketPhp\Resources\Gamma\Tags;
@@ -81,8 +81,22 @@ class Gamma
         return new Comments($this->httpClient);
     }
 
-    public function search(): Search
+    /**
+     * Search markets, events, and profiles.
+     *
+     * @param array<string, mixed> $filters
+     *
+     * @return array<string, mixed>
+     *
+     * @throws PolymarketException
+     */
+    public function search(string $query, array $filters = []): array
     {
-        return new Search($this->httpClient);
+        $response = $this->httpClient->get('/public-search', [
+            'q' => $query,
+            ...$filters,
+        ]);
+
+        return $response->json();
     }
 }

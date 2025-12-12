@@ -24,7 +24,7 @@ describe('Search::search()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/public-search', $searchResults);
 
-        $result = $this->client->gamma()->search()->search('Bitcoin');
+        $result = $this->client->gamma()->search('Bitcoin');
 
         expect($result)->toBeArray()
             ->and($result)->toHaveKey('markets')
@@ -44,7 +44,7 @@ describe('Search::search()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/public-search', $searchResults);
 
-        $result = $this->client->gamma()->search()->search('Bitcoin', filters: ['active' => true]);
+        $result = $this->client->gamma()->search('Bitcoin', filters: ['active' => true]);
 
         expect($result)->toBeArray()
             ->and($result['markets'])->toBeArray();
@@ -59,7 +59,7 @@ describe('Search::search()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/public-search', $searchResults);
 
-        $result = $this->client->gamma()->search()->search('NonexistentQuery');
+        $result = $this->client->gamma()->search('NonexistentQuery');
 
         expect($result)->toBeArray()
             ->and($result['markets'])->toBeEmpty()
@@ -79,7 +79,7 @@ describe('Search::search()', function () {
 
         $this->fakeHttp->addJsonResponse('GET', '/public-search', $searchResults);
 
-        $result = $this->client->gamma()->search()->search('election');
+        $result = $this->client->gamma()->search('election');
 
         expect($result)->toBeArray()
             ->and($result['markets'])->toHaveCount(2)
