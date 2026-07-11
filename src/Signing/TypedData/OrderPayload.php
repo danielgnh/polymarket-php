@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace PolymarketPhp\Polymarket\Signing\TypedData;
 
 /**
- * EIP-712 payload for Polymarket CTF Exchange order signing.
+ * EIP-712 payload for legacy (V1) Polymarket CTF Exchange order signing.
  *
  * The verifying contract is auto-derived from the chain ID unless overridden
  * explicitly, so callers only need to pass the chain ID.
+ *
+ * @deprecated V1-signed orders are rejected since the CLOB V2 cutover on
+ *             2026-04-28. Use {@see OrderPayloadV2} instead.
  */
 class OrderPayload implements TypedDataInterface
 {

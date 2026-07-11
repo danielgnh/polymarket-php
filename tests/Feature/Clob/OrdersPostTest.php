@@ -6,6 +6,7 @@ use PolymarketPhp\Polymarket\Enums\OrderSide;
 use PolymarketPhp\Polymarket\Enums\OrderType;
 use PolymarketPhp\Polymarket\Enums\SignatureType;
 use PolymarketPhp\Polymarket\Exceptions\PolymarketException;
+use PolymarketPhp\Polymarket\Exceptions\SigningException;
 use PolymarketPhp\Polymarket\Http\FakeGuzzleHttpClient;
 use PolymarketPhp\Polymarket\Resources\Clob\Orders;
 use PolymarketPhp\Polymarket\Signing\Eip712Signer;
@@ -15,7 +16,7 @@ const ORDERS_POST_TEST_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efc
 const ORDERS_POST_TEST_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 
 /**
- * Build a complete, valid post() input array.
+ * Build a complete, valid post() input array using the official V2 fixture.
  *
  * @return array<string, mixed>
  */
@@ -25,16 +26,13 @@ function buildValidPostInput(OrderSide $side = OrderSide::BUY): array
         'order' => [
             'maker'         => ORDERS_POST_TEST_ADDRESS,
             'signer'        => ORDERS_POST_TEST_ADDRESS,
-            'taker'         => '0x0000000000000000000000000000000000000000',
-            'tokenId'       => '71321045679252212594626385532706912750332728571942532289631379312455583992563',
-            'makerAmount'   => '100000',
-            'takerAmount'   => '100000',
-            'expiration'    => 0,
-            'nonce'         => 0,
-            'feeRateBps'    => 0,
+            'tokenId'       => '1234',
+            'makerAmount'   => '100000000',
+            'takerAmount'   => '50000000',
             'side'          => $side,
             'signatureType' => SignatureType::EOA->value,
-            'salt'          => 12_345,
+            'salt'          => 479_249_096_354,
+            'timestamp'     => '1780449126930',
         ],
         'owner'     => ORDERS_POST_TEST_ADDRESS,
         'orderType' => OrderType::GTC->value,
@@ -86,47 +84,78 @@ describe('Orders::post() – HTTP behaviour', function (): void {
     });
 });
 
-describe('Orders::post() – signature', function (): void {
-    it('adds a 0x-prefixed 65-byte signature to the order sub-array', function (): void {
+describe('Orders::post() – V2 signature', function (): void {
+    it('produces the exact reference signature for the official V2 fixture', function (): void {
         [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
         $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
 
         $orders->post(buildValidPostInput());
+        $order = $fakeHttp->getRequest('POST', '/order')['data']['order'];
 
-        $request = $fakeHttp->getRequest('POST', '/order');
-
-        expect($request)->not->toBeNull()
-            ->and($request['data']['order'])->toHaveKey('signature')
-            ->and($request['data']['order']['signature'])->toStartWith('0x')
-            ->and(strlen((string) $request['data']['order']['signature']))->toBe(132);
+        // Generated with eth-account 0.13.7 (reference implementation) for
+        // the fixture above on Polygon mainnet against the V2 exchange.
+        expect($order['signature'])->toBe(
+            '0x745070770d383e6f4e6431858070edacbea294ed0e2b16f147127edafc51b59a'
+            . '6e788aaeda02cce5989ee10cc983a4045313e1ec7075c5a5b84f6212b097d36a1b'
+        );
     });
 
-    it('produces the same signature for identical inputs (secp256k1 RFC 6979)', function (): void {
-        $signer = new Eip712Signer(ORDERS_POST_TEST_KEY, 137);
+    it('signs against the neg-risk exchange when negRisk is true', function (): void {
+        [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
+        $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
 
-        [$orders1, $fakeHttp1] = makeOrders($signer);
-        $fakeHttp1->addJsonResponse('POST', '/order', ['success' => true]);
-        $orders1->post(buildValidPostInput());
-        $sig1 = $fakeHttp1->getRequest('POST', '/order')['data']['order']['signature'];
+        $input = buildValidPostInput();
+        $input['negRisk'] = true;
+        $orders->post($input);
+        $order = $fakeHttp->getRequest('POST', '/order')['data']['order'];
 
-        [$orders2, $fakeHttp2] = makeOrders($signer);
-        $fakeHttp2->addJsonResponse('POST', '/order', ['success' => true]);
-        $orders2->post(buildValidPostInput());
-        $sig2 = $fakeHttp2->getRequest('POST', '/order')['data']['order']['signature'];
+        expect($order['signature'])->toBe(
+            '0x0cf7ad04271cdfe92e93422d1ea1154b0c297b101f08c030f4b7555d7e63419e'
+            . '5372c7b3ba494ebf1a54e9df77b1137b1f3ee76017e4c5bb0cdc8073885e194a1c'
+        );
+    });
 
-        expect($sig1)->toBe($sig2);
+    it('signs a version 3 order against the V3 exchange domain', function (): void {
+        [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
+        $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
+
+        $input = buildValidPostInput();
+        $input['version'] = 3;
+        $orders->post($input);
+        $order = $fakeHttp->getRequest('POST', '/order')['data']['order'];
+
+        expect($order['signature'])->toBe(
+            '0x1406e9ec3bcaf3101971b2b612b5680c222e61df601ccc9a9f1f37144f10f49f'
+            . '408bbed7b390357803b2d1b6562a604335b790582211e76401ddbe6ae2ebc0dd1c'
+        );
+    });
+
+    it('rejects POLY_1271 orders with a clear signing error', function (): void {
+        [$orders] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
+
+        $input = buildValidPostInput();
+        $input['order']['signatureType'] = SignatureType::POLY_1271->value;
+
+        expect(fn () => $orders->post($input))
+            ->toThrow(SigningException::class, 'POLY_1271');
     });
 });
 
-describe('Orders::post() – payload shape sent to API', function (): void {
-    it('converts the OrderSide enum to its string value for the API', function (): void {
+describe('Orders::post() – V2 payload shape sent to API', function (): void {
+    it('sends the V2 wire format: side as string, salt as int, amounts as strings', function (): void {
         [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
         $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
 
         $orders->post(buildValidPostInput(OrderSide::BUY));
         $order = $fakeHttp->getRequest('POST', '/order')['data']['order'];
 
-        expect($order['side'])->toBe('BUY');
+        expect($order['side'])->toBe('BUY')
+            ->and($order['salt'])->toBe(479_249_096_354)
+            ->and($order['tokenId'])->toBeString()
+            ->and($order['makerAmount'])->toBeString()
+            ->and($order['takerAmount'])->toBeString()
+            ->and($order['timestamp'])->toBeString()
+            ->and($order['expiration'])->toBe('0');
     });
 
     it('converts the SELL side enum to its string value', function (): void {
@@ -139,35 +168,60 @@ describe('Orders::post() – payload shape sent to API', function (): void {
         expect($order['side'])->toBe('SELL');
     });
 
-    it('normalises all numeric order fields to strings for the CLOB API', function (): void {
+    it('does not send the removed V1 fields', function (): void {
         [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
         $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
 
         $orders->post(buildValidPostInput());
         $order = $fakeHttp->getRequest('POST', '/order')['data']['order'];
 
-        expect($order['salt'])->toBeString()
-            ->and($order['tokenId'])->toBeString()
-            ->and($order['makerAmount'])->toBeString()
-            ->and($order['takerAmount'])->toBeString()
-            ->and($order['expiration'])->toBeString()
-            ->and($order['nonce'])->toBeString()
-            ->and($order['feeRateBps'])->toBeString();
+        expect($order)->not->toHaveKey('taker')
+            ->and($order)->not->toHaveKey('nonce')
+            ->and($order)->not->toHaveKey('feeRateBps');
     });
 
-    it('forwards owner, orderType, and deferExec to the top-level payload', function (): void {
+    it('defaults metadata and builder to zero bytes32 in the payload', function (): void {
         [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
         $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
 
         $orders->post(buildValidPostInput());
+        $order = $fakeHttp->getRequest('POST', '/order')['data']['order'];
+
+        expect($order['metadata'])->toBe('0x' . str_repeat('0', 64))
+            ->and($order['builder'])->toBe('0x' . str_repeat('0', 64));
+    });
+
+    it('fills salt and timestamp automatically when omitted', function (): void {
+        [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
+        $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
+
+        $input = buildValidPostInput();
+        unset($input['order']['salt'], $input['order']['timestamp']);
+        $orders->post($input);
+        $order = $fakeHttp->getRequest('POST', '/order')['data']['order'];
+
+        // Timestamp must be now in milliseconds (13-digit range).
+        expect($order['salt'])->toBeInt()->toBeGreaterThan(0)
+            ->and($order['timestamp'])->toBeString()
+            ->and((int) $order['timestamp'])->toBeGreaterThan(1_700_000_000_000);
+    });
+
+    it('forwards owner, orderType, deferExec, and postOnly to the top-level payload', function (): void {
+        [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
+        $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
+
+        $input = buildValidPostInput();
+        $input['postOnly'] = true;
+        $orders->post($input);
         $payload = $fakeHttp->getRequest('POST', '/order')['data'];
 
         expect($payload['owner'])->toBe(ORDERS_POST_TEST_ADDRESS)
             ->and($payload['orderType'])->toBe(OrderType::GTC->value)
-            ->and($payload['deferExec'])->toBeFalse();
+            ->and($payload['deferExec'])->toBeFalse()
+            ->and($payload['postOnly'])->toBeTrue();
     });
 
-    it('defaults deferExec to false when omitted', function (): void {
+    it('defaults deferExec and postOnly to false when omitted', function (): void {
         [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
         $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
 
@@ -177,6 +231,21 @@ describe('Orders::post() – payload shape sent to API', function (): void {
 
         $payload = $fakeHttp->getRequest('POST', '/order')['data'];
 
-        expect($payload['deferExec'])->toBeFalse();
+        expect($payload['deferExec'])->toBeFalse()
+            ->and($payload['postOnly'])->toBeFalse();
+    });
+
+    it('does not leak the negRisk and version signing options into the payload', function (): void {
+        [$orders, $fakeHttp] = makeOrders(new Eip712Signer(ORDERS_POST_TEST_KEY, 137));
+        $fakeHttp->addJsonResponse('POST', '/order', ['success' => true]);
+
+        $input = buildValidPostInput();
+        $input['negRisk'] = true;
+        $input['version'] = 2;
+        $orders->post($input);
+        $payload = $fakeHttp->getRequest('POST', '/order')['data'];
+
+        expect($payload)->not->toHaveKey('negRisk')
+            ->and($payload)->not->toHaveKey('version');
     });
 });

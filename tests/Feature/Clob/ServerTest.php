@@ -35,6 +35,24 @@ describe('Server::getTime()', function (): void {
     });
 });
 
+describe('Server::getVersion()', function (): void {
+    it('retrieves the active order version from the CLOB API', function (): void {
+        $this->fakeHttp->addJsonResponse('GET', '/version', ['version' => 2]);
+
+        $result = $this->client->clob()->server()->getVersion();
+
+        expect($result)->toBe(2);
+    });
+
+    it('defaults to version 2 when the API omits the version field', function (): void {
+        $this->fakeHttp->addJsonResponse('GET', '/version', []);
+
+        $result = $this->client->clob()->server()->getVersion();
+
+        expect($result)->toBe(2);
+    });
+});
+
 describe('Server::getFeeRate()', function (): void {
     it('fetches fee rate for token', function (): void {
         $feeData = ['fee_rate_bps' => 10, 'fee_percentage' => '0.10'];

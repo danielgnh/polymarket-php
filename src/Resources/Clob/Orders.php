@@ -6,7 +6,9 @@ namespace PolymarketPhp\Polymarket\Resources\Clob;
 
 use GuzzleHttp\Promise\PromiseInterface;
 use PolymarketPhp\Polymarket\Enums\OrderSide;
+use PolymarketPhp\Polymarket\Enums\SignatureType;
 use PolymarketPhp\Polymarket\Exceptions\PolymarketException;
+use PolymarketPhp\Polymarket\Exceptions\SigningException;
 use PolymarketPhp\Polymarket\Http\AsyncClientInterface;
 use PolymarketPhp\Polymarket\Http\BatchResult;
 use PolymarketPhp\Polymarket\Http\HttpClientInterface;
@@ -14,7 +16,7 @@ use PolymarketPhp\Polymarket\Http\Response;
 use PolymarketPhp\Polymarket\Resources\Resource;
 use PolymarketPhp\Polymarket\Resources\Traits\HasAsyncClient;
 use PolymarketPhp\Polymarket\Signing\Eip712Signer;
-use PolymarketPhp\Polymarket\Signing\TypedData\OrderPayload;
+use PolymarketPhp\Polymarket\Signing\TypedData\OrderPayloadV2;
 
 class Orders extends Resource
 {
@@ -80,13 +82,16 @@ class Orders extends Resource
     }
 
     /**
-     * Build, sign, and submit a single order to the CLOB.
+     * Build, sign, and submit a single CLOB V2 order.
      *
-     * The `order` sub-array must carry all twelve EIP-712 struct fields.
-     * Numeric fields (tokenId, amounts, expiration, nonce, feeRateBps, salt)
-     * may be passed as int or numeric string — both are handled transparently.
+     * The `order` sub-array carries the V2 EIP-712 struct fields; `salt`,
+     * `timestamp` (milliseconds), `metadata`, and `builder` are filled with
+     * defaults when omitted. `expiration` is no longer part of the signed
+     * struct — it is forwarded to the API only (default "0"). `negRisk`
+     * selects the neg-risk exchange contract and `version` (2 or 3) the
+     * exchange generation; neither is sent to the API.
      *
-     * @param array{order: array{maker: string, signer: string, taker: string, tokenId: string|int, makerAmount: string|int, takerAmount: string|int, expiration: int, nonce: int, feeRateBps: string|int, side: OrderSide, signatureType: int, salt: int}, owner: string, orderType: string, deferExec?: bool} $inputOrderData
+     * @param array{order: array{maker: string, signer: string, tokenId: string|int, makerAmount: string|int, takerAmount: string|int, side: OrderSide, signatureType?: int, salt?: int|string, timestamp?: string|int, metadata?: string, builder?: string, expiration?: string|int}, owner: string, orderType: string, deferExec?: bool, postOnly?: bool, negRisk?: bool, version?: int} $inputOrderData
      *
      * @return array<string, mixed>
      *
@@ -101,30 +106,55 @@ class Orders extends Resource
 
         $orderData = $inputOrderData['order'];
         $side = $orderData['side'];
+        $signatureType = $orderData['signatureType'] ?? SignatureType::EOA->value;
 
-        // Convert the side enum to its integer representation for EIP-712 encoding
-        $orderData['side'] = $side->forSignature();
+        if ($signatureType === SignatureType::POLY_1271->value) {
+            throw new SigningException(
+                'POLY_1271 orders require the nested TypedDataSign flow, which is not supported yet.'
+            );
+        }
 
-        $orderData['signature'] = $signer->sign(
-            new OrderPayload($orderData, $signer->getChainId())
-        );
+        $message = [
+            'salt'          => $orderData['salt'] ?? random_int(1, time() * 1000),
+            'maker'         => $orderData['maker'],
+            'signer'        => $orderData['signer'],
+            'tokenId'       => $orderData['tokenId'],
+            'makerAmount'   => $orderData['makerAmount'],
+            'takerAmount'   => $orderData['takerAmount'],
+            'side'          => $side->forSignature(),
+            'signatureType' => $signatureType,
+            'timestamp'     => (string) ($orderData['timestamp'] ?? (int) (microtime(true) * 1000)),
+            'metadata'      => $orderData['metadata'] ?? OrderPayloadV2::BYTES32_ZERO,
+            'builder'       => $orderData['builder'] ?? OrderPayloadV2::BYTES32_ZERO,
+        ];
 
-        // Restore the string side value and normalise all numeric fields to
-        // strings, as required by the CLOB API.
-        $orderData['side'] = $side->value;
-        $orderData['salt'] = (string) $orderData['salt'];
-        $orderData['tokenId'] = (string) $orderData['tokenId'];
-        $orderData['makerAmount'] = (string) $orderData['makerAmount'];
-        $orderData['takerAmount'] = (string) $orderData['takerAmount'];
-        $orderData['expiration'] = (string) $orderData['expiration'];
-        $orderData['nonce'] = (string) $orderData['nonce'];
-        $orderData['feeRateBps'] = (string) $orderData['feeRateBps'];
+        $signature = $signer->sign(new OrderPayloadV2(
+            $message,
+            $signer->getChainId(),
+            $inputOrderData['negRisk'] ?? false,
+            $inputOrderData['version'] ?? 2,
+        ));
 
         return $this->httpClient->post('/order', [
-            'order'     => $orderData,
+            'order' => [
+                'salt'          => (int) $message['salt'],
+                'maker'         => $message['maker'],
+                'signer'        => $message['signer'],
+                'tokenId'       => (string) $message['tokenId'],
+                'makerAmount'   => (string) $message['makerAmount'],
+                'takerAmount'   => (string) $message['takerAmount'],
+                'side'          => $side->value,
+                'expiration'    => (string) ($orderData['expiration'] ?? '0'),
+                'signatureType' => $signatureType,
+                'timestamp'     => $message['timestamp'],
+                'metadata'      => $message['metadata'],
+                'builder'       => $message['builder'],
+                'signature'     => $signature,
+            ],
             'owner'     => $inputOrderData['owner'],
             'orderType' => $inputOrderData['orderType'],
             'deferExec' => $inputOrderData['deferExec'] ?? false,
+            'postOnly'  => $inputOrderData['postOnly'] ?? false,
         ])->json();
     }
 

@@ -26,6 +26,19 @@ class Server extends Resource
     }
 
     /**
+     * Active order version served by the CLOB (2 when the API omits it).
+     *
+     * @throws PolymarketException
+     */
+    public function getVersion(): int
+    {
+        $data = $this->httpClient->get('/version')->json();
+        $version = $data['version'] ?? 2;
+
+        return is_numeric($version) ? (int) $version : 2;
+    }
+
+    /**
      * @return array<string, mixed>
      *
      * @throws PolymarketException
