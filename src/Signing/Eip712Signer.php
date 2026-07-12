@@ -197,7 +197,7 @@ class Eip712Signer
         }
 
         if ($type === 'uint256' || $type === 'uint8') {
-            if (!is_int($value) && !(is_string($value) && ctype_digit($value))) {
+            if (!is_int($value) && (!is_string($value) || !ctype_digit($value))) {
                 throw new InvalidArgumentException(
                     "Expected integer or numeric string for type '{$type}', got "
                     . get_debug_type($value)
