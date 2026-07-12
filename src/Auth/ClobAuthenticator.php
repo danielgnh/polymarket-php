@@ -23,7 +23,6 @@ class ClobAuthenticator
     public function __construct(
         private readonly Eip712Signer $signer,
         private readonly string $clobBaseUrl,
-        private readonly int $chainId = 137,
         private readonly ?ApiCredentials $credentials = null
     ) {}
 
@@ -181,7 +180,6 @@ class ClobAuthenticator
         return new self(
             $this->signer,
             $this->clobBaseUrl,
-            $this->chainId,
             $credentials
         );
     }
