@@ -77,8 +77,7 @@ class Client
 
         $this->clobAuthenticator = new ClobAuthenticator(
             $signer,
-            $this->config->clobBaseUrl,
-            $this->config->chainId
+            $this->config->clobBaseUrl
         );
 
         $credentials = $this->clobAuthenticator->deriveOrCreateCredentials($nonce);
