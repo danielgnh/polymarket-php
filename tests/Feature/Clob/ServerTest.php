@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use PolymarketPhp\Polymarket\Client;
 use PolymarketPhp\Polymarket\Http\FakeGuzzleHttpClient;
+use PolymarketPhp\Polymarket\Http\Response;
 
 beforeEach(function (): void {
     $this->fakeHttp = new FakeGuzzleHttpClient();
@@ -12,28 +13,43 @@ beforeEach(function (): void {
 
 describe('Server::healthCheck()', function (): void {
     it('performs health check', function (): void {
-        $healthData = ['status' => 'ok', 'timestamp' => 1234567890];
+        $healthData = "OK";
 
-        $this->fakeHttp->addJsonResponse('GET', '/', $healthData);
+        $this->fakeHttp->addResponse('GET', '/', new Response(200, [], $healthData));
 
         $result = $this->client->clob()->server()->healthCheck();
 
-        expect($result)->toBeArray()
-            ->and($result['status'])->toBe('ok');
+        expect($result)->toBe('OK');
     });
 });
 
 describe('Server::getTime()', function (): void {
     it('retrieves current server timestamp', function (): void {
-        $timeData = ['timestamp' => 1234567890, 'iso' => '2025-01-15T12:00:00Z'];
+        $timeData = "1234567890";
 
-        $this->fakeHttp->addJsonResponse('GET', '/time', $timeData);
+        $this->fakeHttp->addResponse('GET', '/time', new Response(200, [], $timeData));
 
         $result = $this->client->clob()->server()->getTime();
 
-        expect($result)->toBeArray()
-            ->and($result)->toHaveKey('timestamp')
-            ->and($result['timestamp'])->toBe(1234567890);
+        expect($result)->toBe(1234567890);
+    });
+});
+
+describe('Server::getVersion()', function (): void {
+    it('retrieves the active order version from the CLOB API', function (): void {
+        $this->fakeHttp->addJsonResponse('GET', '/version', ['version' => 2]);
+
+        $result = $this->client->clob()->server()->getVersion();
+
+        expect($result)->toBe(2);
+    });
+
+    it('defaults to version 2 when the API omits the version field', function (): void {
+        $this->fakeHttp->addJsonResponse('GET', '/version', []);
+
+        $result = $this->client->clob()->server()->getVersion();
+
+        expect($result)->toBe(2);
     });
 });
 

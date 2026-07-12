@@ -436,14 +436,15 @@ OrderStatus::UNMATCHED  // Marketable but experiencing delay
 
 #### SignatureType
 
-For order authentication methods:
+For order authentication methods (canonical CLOB V2 values):
 
 ```php
 use PolymarketPhp\Polymarket\Enums\SignatureType;
 
-SignatureType::POLYMARKET_PROXY_EMAIL   // Email/Magic account (value: 1)
-SignatureType::POLYMARKET_PROXY_WALLET  // Browser wallet (value: 2)
-SignatureType::EOA                      // Externally owned account (value: 0)
+SignatureType::EOA               // Externally owned account (value: 0)
+SignatureType::POLY_PROXY        // Polymarket proxy wallet (value: 1)
+SignatureType::POLY_GNOSIS_SAFE  // Polymarket Gnosis Safe (value: 2)
+SignatureType::POLY_1271         // EIP-1271 smart contract wallet (value: 3, signing not supported yet)
 ```
 
 ### Usage Example

@@ -76,7 +76,7 @@ class Clob
 
     public function orders(): Orders
     {
-        return new Orders($this->httpClient, $this->asyncClient);
+        return new Orders($this->authenticator?->getSigner(), $this->httpClient, $this->asyncClient);
     }
 
     public function pricing(): Pricing

@@ -6,9 +6,10 @@ namespace PolymarketPhp\Polymarket\Auth;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
-use PolymarketPhp\Polymarket\Auth\Signer\Eip712Signer;
 use PolymarketPhp\Polymarket\Auth\Signer\HmacSigner;
 use PolymarketPhp\Polymarket\Exceptions\ClobAuthenticationException;
+use PolymarketPhp\Polymarket\Signing\Eip712Signer;
+use PolymarketPhp\Polymarket\Signing\TypedData\ClobAuthPayload;
 
 /**
  * Manages CLOB authentication flow (L1 and L2).
@@ -111,7 +112,9 @@ class ClobAuthenticator
     public function generateL1Headers(int $nonce = 0, ?int $timestamp = null): array
     {
         $timestamp ??= time();
-        $signature = $this->signer->signClobAuth($timestamp, $nonce);
+        $signature = $this->signer->sign(
+            new ClobAuthPayload($this->signer->getAddress(), $timestamp, $nonce, $this->chainId)
+        );
 
         return [
             'POLY_ADDRESS' => strtolower($this->signer->getAddress()),
@@ -171,6 +174,14 @@ class ClobAuthenticator
     public function getAddress(): string
     {
         return $this->signer->getAddress();
+    }
+
+    /**
+     * Expose the underlying signer so resources can sign payloads directly.
+     */
+    public function getSigner(): Eip712Signer
+    {
+        return $this->signer;
     }
 
     /**

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace PolymarketPhp\Polymarket;
 
 use PolymarketPhp\Polymarket\Auth\ClobAuthenticator;
-use PolymarketPhp\Polymarket\Auth\Signer\Eip712Signer;
 use PolymarketPhp\Polymarket\Exceptions\ClobAuthenticationException;
 use PolymarketPhp\Polymarket\Exceptions\SigningException;
 use PolymarketPhp\Polymarket\Http\AsyncClient;
 use PolymarketPhp\Polymarket\Http\AsyncClientInterface;
 use PolymarketPhp\Polymarket\Http\GuzzleHttpClient;
 use PolymarketPhp\Polymarket\Http\HttpClientInterface;
+use PolymarketPhp\Polymarket\Signing\Eip712Signer;
 
 class Client
 {

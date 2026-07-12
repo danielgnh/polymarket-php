@@ -99,6 +99,19 @@ class FakeGuzzleHttpClient implements HttpClientInterface
         return isset($this->requests[$key]);
     }
 
+    /**
+     * Return the recorded request data for the given method and path, or null
+     * if no such request has been made yet.
+     *
+     * @return array{method: string, path: string, data: array<int|string, mixed>}|null
+     */
+    public function getRequest(string $method, string $path): ?array
+    {
+        $key = $this->makeKey($method, $path);
+
+        return $this->requests[$key] ?? null;
+    }
+
     public function addExceptionResponse(string $method, string $path, PolymarketException $exception): void
     {
         $key = $this->makeKey($method, $path);
